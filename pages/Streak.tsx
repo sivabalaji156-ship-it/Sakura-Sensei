@@ -4,6 +4,8 @@ import { STREAK_LEVELS } from '../constants';
 import { Flame, Lock, CheckCircle2, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const MotionDiv = motion.div as any;
+
 interface StreakProps {
     user: UserProfile;
 }
@@ -28,7 +30,7 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
             {/* Rising Ink Drops */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
                 {Array.from({ length: 20 }).map((_, i) => (
-                    <motion.div
+                    <MotionDiv
                         key={i}
                         className="absolute bg-[#2C2C2C] rounded-full blur-sm"
                         style={{
@@ -55,7 +57,7 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
             <div className="relative z-10 p-6 lg:p-10 flex flex-col items-center">
                 
                 {/* Header Title */}
-                <motion.div 
+                <MotionDiv 
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     className="text-center mb-10"
@@ -64,10 +66,10 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
                         WAY OF THE BRUSH
                     </h1>
                     <p className="text-[#D74B4B] font-bold tracking-widest uppercase mt-2 text-sm">Consistency is your Power</p>
-                </motion.div>
+                </MotionDiv>
 
                 {/* Main Counter */}
-                <motion.div 
+                <MotionDiv 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="relative w-48 h-48 md:w-64 md:h-64 flex flex-col items-center justify-center bg-white rounded-full border-4 border-[#D74B4B] shadow-[0_0_40px_rgba(215,75,75,0.2)] mb-12 group"
@@ -78,7 +80,7 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
                     <Zap className="w-12 h-12 text-[#D74B4B] fill-[#D74B4B] mb-2 animate-pulse" />
                     <span className="text-7xl font-black text-[#2C2C2C] leading-none">{user.streak}</span>
                     <span className="text-xl font-bold text-[#8E9AAF] uppercase">Days</span>
-                </motion.div>
+                </MotionDiv>
 
                 {/* Progress Timeline */}
                 <div className="w-full max-w-4xl relative">
@@ -89,7 +91,7 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
                         const isNext = !isReached && (idx === 0 || user.streak >= STREAK_LEVELS[idx - 1].days);
                         
                         return (
-                            <motion.div 
+                            <MotionDiv 
                                 key={level.days}
                                 initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -125,14 +127,16 @@ const Streak: React.FC<StreakProps> = ({ user }) => {
                                         <h3 className={`text-xl font-black font-japanese italic ${isReached ? 'text-[#2C2C2C]' : 'text-[#8E9AAF]'}`}>
                                             {level.name}
                                         </h3>
-                                        <span className="text-3xl filter drop-shadow-sm">{level.icon}</span>
+                                        <div className="p-1 rounded-lg bg-white shadow-sm border border-gray-100">
+                                             <level.icon className={`w-8 h-8 ${isReached ? level.color : 'text-gray-300'}`} />
+                                        </div>
                                     </div>
                                     <p className="text-[#56636A] text-sm font-medium mb-2">{level.description}</p>
                                     <div className="inline-block px-2 py-1 bg-[#F0EFE9] rounded text-xs font-mono font-bold text-[#8E9AAF] border border-[#E5E0D0]">
                                         {level.days} Day Milestone
                                     </div>
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         );
                     })}
                 </div>

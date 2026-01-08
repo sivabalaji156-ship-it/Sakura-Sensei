@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { UserProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -8,9 +9,12 @@ import {
   Lock, 
   CheckCircle2, 
   ArrowRight,
-  Award
+  Award,
+  Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const MotionDiv = motion.div as any;
 
 interface DashboardProps {
   user: UserProfile;
@@ -40,19 +44,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         {/* Abstract Red Sun Background */}
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-[#D74B4B] rounded-full opacity-10 blur-3xl group-hover:opacity-20 transition-opacity"></div>
         
-        <div className="relative z-10 max-w-2xl">
-            <h2 className="text-4xl font-extrabold mb-4 font-japanese text-[#2F3E46]">Ganbatte, {user.name}! 🎌</h2>
-            <p className="opacity-90 text-lg mb-8 leading-relaxed text-[#56636A]">
-                Your journey to mastery continues. You are currently focusing on <span className="font-bold bg-[#D74B4B]/10 px-2 rounded border border-[#D74B4B]/20 text-[#D74B4B]">{user.level}</span>. 
-                Ready to conquer new Kanji?
-            </p>
-            
-            <button 
-                onClick={() => navigate('/flashcards')}
-                className="bg-[#D74B4B] text-[#F9F7E8] px-8 py-4 rounded-xl font-bold shadow-lg shadow-[#D74B4B]/30 hover:bg-[#BC002D] transition-all flex items-center gap-2"
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+            <div className="max-w-2xl">
+                <h2 className="text-4xl font-extrabold mb-4 font-japanese text-[#2F3E46]">Ganbatte, {user.name}! 🎌</h2>
+                <p className="opacity-90 text-lg mb-8 leading-relaxed text-[#56636A]">
+                    Your journey to mastery continues. You are currently focusing on <span className="font-bold bg-[#D74B4B]/10 px-2 rounded border border-[#D74B4B]/20 text-[#D74B4B]">{user.level}</span>. 
+                    Ready to conquer new Kanji?
+                </p>
+                
+                <button 
+                    onClick={() => navigate('/flashcards')}
+                    className="bg-[#D74B4B] text-[#F9F7E8] px-8 py-4 rounded-xl font-bold shadow-lg shadow-[#D74B4B]/30 hover:bg-[#BC002D] transition-all flex items-center gap-2"
+                >
+                    <Play className="w-5 h-5 fill-[#F9F7E8]" /> Continue Learning
+                </button>
+            </div>
+
+            {/* Streak Counter Widget */}
+            <div 
+                onClick={() => navigate('/streak')}
+                className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex flex-col items-center justify-center min-w-[120px] cursor-pointer hover:bg-orange-100 transition-colors group/streak"
             >
-                <Play className="w-5 h-5 fill-[#F9F7E8]" /> Continue Learning
-            </button>
+                <div className="p-3 bg-white rounded-full mb-2 shadow-sm group-hover/streak:scale-110 transition-transform">
+                     <Zap className="w-6 h-6 text-orange-500 fill-orange-500 animate-pulse" />
+                </div>
+                <span className="text-3xl font-black text-[#2C2C2C] leading-none mb-1">{user.streak}</span>
+                <span className="text-xs font-bold text-orange-600 uppercase tracking-widest">Day Streak</span>
+            </div>
         </div>
       </div>
 
@@ -68,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   const isPassed = levels.indexOf(user.level) > index; 
                   
                   return (
-                      <motion.div 
+                      <MotionDiv 
                         key={lvl}
                         whileHover={{ y: -5 }}
                         onClick={() => handleLevelClick(lvl)}
@@ -94,7 +112,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                           <div className="flex items-center text-xs font-bold text-[#D74B4B] group-hover:translate-x-1 transition-transform">
                               Enter <ArrowRight className="w-3 h-3 ml-1" />
                           </div>
-                      </motion.div>
+                      </MotionDiv>
                   )
               })}
           </div>

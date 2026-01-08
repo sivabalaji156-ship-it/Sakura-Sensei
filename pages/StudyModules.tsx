@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Book, Edit3, Type, Headphones, MessageSquare } from 'lucide-react';
+import { Book, PenTool, Type, Headphones, MessageSquare } from 'lucide-react';
 import { JLPTLevel } from '../types';
 
 interface StudyModulesProps {
@@ -9,8 +10,8 @@ interface StudyModulesProps {
 
 const modules = [
   { id: 'vocabulary', title: 'Vocabulary', subtitle: '語彙 (Goi)', icon: Book, color: 'bg-orange-100 text-orange-600 border-orange-200' },
-  { id: 'grammar', title: 'Grammar', subtitle: '文法 (Bunpou)', icon: Edit3, color: 'bg-blue-100 text-blue-600 border-blue-200' },
-  { id: 'kanji', title: 'Kanji', subtitle: '漢字 (Kanji)', icon: Type, color: 'bg-red-100 text-red-600 border-red-200' },
+  { id: 'grammar', title: 'Grammar', subtitle: '文法 (Bunpou)', icon: PenTool, color: 'bg-blue-100 text-blue-600 border-blue-200' },
+  { id: 'kanji', title: 'Kanji', subtitle: '漢字 (Kanji)', icon: Type, color: 'bg-red-100 text-red-600 border-red-200', link: '/kanji-practice' },
   { id: 'listening', title: 'Listening', subtitle: '聴解 (Choukai)', icon: Headphones, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', link: '/listening' },
   { id: 'reading', title: 'Reading', subtitle: '読解 (Dokkai)', icon: MessageSquare, color: 'bg-purple-100 text-purple-600 border-purple-200', link: '/reading' },
 ];

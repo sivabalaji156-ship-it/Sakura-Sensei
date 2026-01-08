@@ -5,6 +5,8 @@ import { UserProfile } from '../types';
 import { Award, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const MotionDiv = motion.div as any;
+
 const Badges: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
 
@@ -37,16 +39,19 @@ const Badges: React.FC = () => {
                   </div>
               </div>
           </div>
-          <div className="absolute -right-10 -top-10 text-9xl opacity-10 rotate-12 text-white">🏆</div>
+          <div className="absolute -right-10 -top-10 opacity-10 rotate-12 text-white">
+              <Award className="w-48 h-48" />
+          </div>
       </div>
 
       {/* Badges Grid - Rectangular cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {BADGES.map((badge, idx) => {
               const isUnlocked = earnedIds.has(badge.id);
+              const Icon = badge.icon;
               
               return (
-                  <motion.div
+                  <MotionDiv
                     key={badge.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -54,14 +59,12 @@ const Badges: React.FC = () => {
                     className={`relative rounded-2xl p-5 border-2 transition-all flex flex-col items-center text-center overflow-hidden group ${
                         isUnlocked 
                         ? 'bg-white border-[#D74B4B] shadow-md hover:shadow-lg hover:-translate-y-1' 
-                        : 'bg-[#F0EFE9] border-[#E5E0D0] hover:border-[#D5D0C0]'
+                        : 'bg-[#F0EFE9] border-[#E5E0D0] hover:border-[#E5E0D0]'
                     }`}
                   >
                       {/* Icon Container with Lock Overlay */}
-                      <div className={`text-5xl mb-4 p-3 rounded-full transition-transform duration-300 group-hover:scale-110 relative ${isUnlocked ? 'bg-[#F9F7E8]' : 'bg-[#E5E0D0]'}`}>
-                          <span className={!isUnlocked ? 'filter grayscale blur-[2px] opacity-40 block' : 'block'}>
-                              {badge.icon}
-                          </span>
+                      <div className={`w-20 h-20 mb-4 p-4 rounded-full transition-transform duration-300 group-hover:scale-110 relative flex items-center justify-center ${isUnlocked ? 'bg-[#F9F7E8]' : 'bg-[#E5E0D0]'}`}>
+                          <Icon className={`w-full h-full ${isUnlocked ? badge.color : 'text-gray-400 opacity-20'}`} />
                           
                           {/* Lock Overlay */}
                           {!isUnlocked && (
@@ -84,7 +87,7 @@ const Badges: React.FC = () => {
                           {badge.description}
                       </p>
 
-                  </motion.div>
+                  </MotionDiv>
               );
           })}
       </div>

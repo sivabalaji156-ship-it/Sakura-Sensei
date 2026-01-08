@@ -1,12 +1,20 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
 
+// Safe casts for motion components in browser environment
+const MotionSvg = motion.svg as any;
+const MotionPath = motion.path as any;
+const MotionDiv = motion.div as any;
+const MotionButton = motion.button as any;
+const MotionP = motion.p as any;
+
 // --- SVGs for Traditional Art Elements ---
 
 const Cloud = ({ className, delay = 0 }: { className?: string; delay?: number }) => (
-    <motion.svg
+    <MotionSvg
         viewBox="0 0 200 100"
         className={`absolute opacity-80 ${className}`}
         initial={{ x: -20 }}
@@ -18,12 +26,12 @@ const Cloud = ({ className, delay = 0 }: { className?: string; delay?: number })
             fill="#FFFFFF"
             stroke="none"
         />
-    </motion.svg>
+    </MotionSvg>
 );
 
 const EnsoBrush = () => (
     <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
-        <motion.path
+        <MotionPath
             d="M 100 100 m -75 0 a 75 75 0 1 0 150 0 a 75 75 0 1 0 -150 0"
             fill="none"
             stroke="#D74B4B" 
@@ -72,7 +80,7 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
 
             {/* Scenery */}
             <div className="absolute inset-0 z-0 flex flex-col justify-end items-center">
-                <motion.div 
+                <MotionDiv 
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
@@ -100,7 +108,7 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
             {/* Main Content */}
             <div className="relative z-50 h-full flex flex-col items-center justify-center p-6 text-center">
                 
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.5 }}
@@ -120,11 +128,11 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
                         Begin your journey through the language of the rising sun. <br/>
                         Consistency is the path to mastery.
                     </p>
-                </motion.div>
+                </MotionDiv>
 
                 {/* --- Styled Button Box --- */}
                 <div className="relative group">
-                    <motion.button
+                    <MotionButton
                         onClick={handleStart}
                         disabled={isNavigating}
                         whileHover={{ scale: 1.05 }}
@@ -135,7 +143,7 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]" />
                         
                         <span>START・IKUZO</span>
-                    </motion.button>
+                    </MotionButton>
 
                     {/* Enso Animation Layer */}
                     <AnimatePresence>
@@ -150,14 +158,14 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
                 {/* Loading Text */}
                 <AnimatePresence>
                     {isNavigating && (
-                        <motion.p
+                        <MotionP
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="absolute bottom-12 text-[#D74B4B] font-bold text-sm tracking-widest uppercase"
                         >
                             Entering Dojo...
-                        </motion.p>
+                        </MotionP>
                     )}
                 </AnimatePresence>
 
@@ -165,7 +173,7 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
 
             {/* Falling Petals */}
             {Array.from({ length: 8 }).map((_, i) => (
-                <motion.div
+                <MotionDiv
                     key={i}
                     className="absolute z-10 text-[#FFC0CB] opacity-60 text-xl pointer-events-none"
                     initial={{ y: -20, x: Math.random() * window.innerWidth }}
@@ -178,7 +186,7 @@ const Landing: React.FC<LandingProps> = ({ user }) => {
                     }}
                 >
                     🌸
-                </motion.div>
+                </MotionDiv>
             ))}
         </div>
     );

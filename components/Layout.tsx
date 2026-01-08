@@ -1,5 +1,6 @@
-import React, { ReactNode, useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+
+import React, { ReactNode, useState, useRef, useEffect } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -13,10 +14,14 @@ import {
   Award,
   LogOut,
   Type,
-  Book
+  Book,
+  Repeat,
+  MonitorPlay,
+  TrendingUp
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { BadgePopup } from './BadgePopup';
+import { db } from '../services/db';
 
 interface LayoutProps {
   children: ReactNode;
@@ -26,9 +31,45 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSystemOpen, setIsSystemOpen] = useState(false);
+  const systemMenuRef = useRef<HTMLDivElement>(null);
+  
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (systemMenuRef.current && !systemMenuRef.current.contains(event.target as Node)) {
+        setIsSystemOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // --- Handlers ---
+
+  const handleSwitchUser = () => {
+      // 1. Clear Local Storage
+      db.logout();
+      // 2. Update Parent State (App.tsx)
+      onLogout();
+      // 3. Navigate safely without reloading
+      navigate('/login', { replace: true });
+  };
+
+  const handleSplashRedirect = () => {
+      navigate('/');
+  };
+
+  const handleSignOut = () => {
+      db.logout();
+      onLogout();
+      navigate('/', { replace: true });
+  };
 
   const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
     const isActive = location.pathname.startsWith(to) && to !== '/' ? true : location.pathname === to;
@@ -36,14 +77,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
       <NavLink
         to={to}
         onClick={() => setIsSidebarOpen(false)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
           isActive 
-            ? 'bg-[#D74B4B] text-[#F9F7E8] shadow-lg shadow-[#D74B4B]/30' 
+            ? 'bg-[#D74B4B] text-[#F9F7E8] shadow-md shadow-[#D74B4B]/30' 
             : 'text-[#56636A] hover:bg-[#EBE9DE] hover:text-[#2C2C2C]'
         }`}
       >
-        <Icon className={`w-5 h-5 ${isActive ? 'text-[#F9F7E8]' : 'text-[#8E9AAF] group-hover:text-[#D74B4B]'}`} />
-        <span className="font-semibold font-japanese">{label}</span>
+        <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-[#F9F7E8]' : 'text-[#8E9AAF] group-hover:text-[#D74B4B]'}`} />
+        <span className="font-semibold font-japanese tracking-wide">{label}</span>
+        {isActive && (
+            <div className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full"></div>
+        )}
       </NavLink>
     );
   };
@@ -62,63 +106,62 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-white/80 backdrop-blur-xl border-r border-[#E5E0D0] shadow-xl lg:shadow-none transition-transform duration-300 ease-in-out transform flex flex-col ${
+        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-white/95 backdrop-blur-xl border-r border-[#E5E0D0] shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out transform flex flex-col ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-[#E5E0D0]">
-          <div className="flex items-center gap-2 text-[#D74B4B]">
-            <span className="text-3xl">⛩️</span>
-            <h1 className="text-xl font-black tracking-tighter uppercase text-[#2F3E46]">Sakura<span className="text-[#D74B4B]">Sensei</span></h1>
+        {/* Top Header */}
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[#D74B4B] select-none">
+             <div className="w-10 h-10 bg-[#F9F7E8] rounded-xl flex items-center justify-center border border-[#D74B4B]/20">
+                <span className="text-2xl">🌸</span>
+             </div>
+             <div>
+                <h1 className="text-lg font-black tracking-tighter uppercase text-[#2F3E46] leading-none">Sakura</h1>
+                <h1 className="text-lg font-black tracking-tighter uppercase text-[#D74B4B] leading-none">Sensei</h1>
+             </div>
           </div>
           <button onClick={toggleSidebar} className="lg:hidden text-[#8E9AAF] hover:text-[#2C2C2C]">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <nav className="flex flex-col px-4 gap-1.5 mt-4 flex-1 overflow-y-auto custom-scrollbar">
-          <div className="px-4 py-2 text-xs font-bold text-[#8E9AAF] uppercase tracking-wider">Start</div>
-          <NavItem to="/dashboard" icon={LayoutDashboard} label="Home" />
-          <NavItem to="/kana" icon={Type} label="Kana" />
+        {/* Scrollable Nav Area */}
+        <nav className="flex flex-col px-4 gap-1.5 flex-1 overflow-y-auto custom-scrollbar pb-6">
+          <div className="px-4 py-2 text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest opacity-60 mt-2">Dojo Entrance</div>
+          <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
+          <NavItem to="/progress" icon={TrendingUp} label="My Progress" />
+          <NavItem to="/kana" icon={Type} label="Kana Charts" />
           
-          <div className="px-4 py-2 mt-4 text-xs font-bold text-[#8E9AAF] uppercase tracking-wider">Learn</div>
-          <NavItem to="/study" icon={BookOpen} label="Study" />
-          <NavItem to="/reading" icon={Book} label="Stories" />
+          <div className="px-4 py-2 mt-6 text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest opacity-60">Study Materials</div>
+          <NavItem to="/study" icon={BookOpen} label="Modules" />
+          <NavItem to="/reading" icon={Book} label="Reading" />
           <NavItem to="/listening" icon={Headphones} label="Listening" />
           
-          <div className="px-4 py-2 mt-4 text-xs font-bold text-[#8E9AAF] uppercase tracking-wider">Train</div>
+          <div className="px-4 py-2 mt-6 text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest opacity-60">Training Grounds</div>
           <NavItem to="/flashcards" icon={Layers} label="Flashcards" />
           <NavItem to="/practice" icon={Brain} label="Mock Exam" />
           <NavItem to="/coach" icon={MessageCircle} label="AI Sensei" />
           
-          <div className="px-4 py-2 mt-4 text-xs font-bold text-[#8E9AAF] uppercase tracking-wider">Profile</div>
-          <NavItem to="/badges" icon={Award} label="Badges" />
+          <div className="px-4 py-2 mt-6 text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest opacity-60">Record</div>
+          <NavItem to="/badges" icon={Award} label="Trophies" />
         </nav>
-
-        <div className="p-6 bg-[#FDFCF8] border-t border-[#E5E0D0]">
-            <div className="bg-[#EBE9DE] rounded-2xl p-4 border border-[#D5D0C0] mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                    <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-white" />
-                    <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-[#2C2C2C] truncate">{user.name}</p>
-                        <p className="text-xs text-[#D74B4B] font-bold bg-[#D74B4B]/10 px-2 py-0.5 rounded-full inline-block border border-[#D74B4B]/20">{user.level}</p>
-                    </div>
-                </div>
-                <div className="w-full bg-white rounded-full h-2 mt-2 border border-[#D5D0C0]">
-                    <div 
-                        className="bg-[#D74B4B] h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${(user.xp % 1000) / 10}%` }}
-                    ></div>
-                </div>
-                <p className="text-xs text-[#56636A] mt-1 text-right">{user.xp} XP</p>
-            </div>
-            
-            <button 
-                onClick={onLogout}
-                className="flex items-center gap-2 text-[#56636A] hover:text-[#D74B4B] transition-colors text-sm font-semibold w-full px-2"
+        
+        {/* Minimal User Info at bottom */}
+        <div className="p-4 border-t border-[#E5E0D0] bg-[#FDFCF8]">
+            <div 
+                onClick={() => {
+                    navigate('/profile');
+                    setIsSidebarOpen(false);
+                }}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F0EFE9] transition-colors cursor-pointer border border-transparent hover:border-[#E5E0D0]"
             >
-                <LogOut className="w-4 h-4" /> Sign Out
-            </button>
+                <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} alt="User" className="w-9 h-9 rounded-full border border-[#D5D0C0] bg-white" />
+                <div className="overflow-hidden">
+                    <p className="text-sm font-bold text-[#2C2C2C] truncate">{user.name}</p>
+                    <p className="text-[10px] text-[#8E9AAF] font-bold uppercase tracking-wide">Level {user.level}</p>
+                </div>
+            </div>
         </div>
       </aside>
 
@@ -133,16 +176,75 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             <Menu className="w-6 h-6" />
           </button>
 
-          <div className="flex items-center gap-4 ml-auto">
-             {/* Streak Link */}
-             <NavLink to="/streak" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF8E1] text-amber-600 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors hover:scale-105 active:scale-95 group">
+          <div className="flex items-center gap-3 ml-auto">
+             {/* Streak Link (Hidden on very small screens) */}
+             <NavLink to="/streak" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF8E1] text-amber-600 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors hover:scale-105 active:scale-95 group">
                 <Zap className="w-4 h-4 fill-amber-500 text-amber-500 group-hover:animate-pulse" />
                 <span className="font-bold text-sm">{user.streak} Days</span>
              </NavLink>
 
-             <NavLink to="/badges" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FCE4EC] text-[#D74B4B] rounded-full border border-pink-200 hover:bg-pink-100 transition-colors hover:scale-105 active:scale-95">
+             {/* Trophies Link (Hidden on very small screens) */}
+             <NavLink to="/badges" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FCE4EC] text-[#D74B4B] rounded-full border border-pink-200 hover:bg-pink-100 transition-colors hover:scale-105 active:scale-95">
                 <Award className="w-4 h-4" />
                 <span className="font-bold text-sm">{user.badges.length} Trophies</span>
+             </NavLink>
+
+            {/* --- SYSTEM MENU DROPDOWN (Torii Gate) --- */}
+            <div className="relative" ref={systemMenuRef}>
+                <button 
+                    onClick={() => setIsSystemOpen(!isSystemOpen)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${isSystemOpen ? 'bg-[#2F3E46] border-[#2F3E46] text-white shadow-md scale-105' : 'bg-white border-[#E5E0D0] text-[#2C2C2C] hover:border-[#D74B4B] hover:text-[#D74B4B]'}`}
+                    title="System Menu"
+                >
+                    <span className="text-sm">⛩️</span>
+                </button>
+
+                {isSystemOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E5E0D0] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="p-3 border-b border-[#E5E0D0] bg-[#F9F7E8]">
+                            <p className="text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest text-center">System</p>
+                        </div>
+                        <div className="p-1.5">
+                            <button 
+                                onClick={handleSplashRedirect}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-[#56636A] hover:bg-[#F0EFE9] hover:text-[#2C2C2C] rounded-xl transition-all text-xs font-bold text-left"
+                            >
+                                <MonitorPlay className="w-4 h-4" /> Title Screen
+                            </button>
+                            
+                            <button 
+                                onClick={handleSwitchUser}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-[#56636A] hover:bg-[#F0EFE9] hover:text-[#2C2C2C] rounded-xl transition-all text-xs font-bold text-left"
+                            >
+                                <Repeat className="w-4 h-4" /> Switch User
+                            </button>
+                            
+                            <div className="my-1 border-t border-[#E5E0D0]"></div>
+
+                            <button 
+                                onClick={handleSignOut}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-[#D74B4B] hover:bg-[#D74B4B]/10 rounded-xl transition-all text-xs font-bold text-left"
+                            >
+                                <LogOut className="w-4 h-4" /> Sign Out
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+             {/* Profile Link (Avatar) */}
+             <NavLink 
+                to="/profile" 
+                className="relative group transition-transform hover:scale-105 active:scale-95"
+                title="Go to Profile"
+             >
+                <div className="w-9 h-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-white ring-2 ring-[#E5E0D0] group-hover:ring-[#D74B4B] transition-all">
+                    <img 
+                        src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover" 
+                    />
+                </div>
              </NavLink>
           </div>
         </header>

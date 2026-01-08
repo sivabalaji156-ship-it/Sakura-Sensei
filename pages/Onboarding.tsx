@@ -35,24 +35,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, initialName }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-indigo-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg relative overflow-hidden border border-white/50">
-        {/* Decorative background elements */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-sky-100 rounded-full opacity-50 blur-3xl"></div>
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-100 rounded-full opacity-50 blur-3xl"></div>
+    <div className="min-h-screen bg-[#F9F7E8] flex items-center justify-center p-4 relative overflow-hidden font-japanese">
+      {/* Background Textures */}
+      <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[#D74B4B]/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-[#2F3E46]/5 rounded-full blur-3xl" />
+      <div className="absolute inset-0 opacity-10 pointer-events-none" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232C2C2C' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} 
+      />
 
+      <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg relative z-10 border border-[#E5E0D0]">
+        
         <div className="relative z-10">
             <div className="flex justify-center mb-8">
-                <div className="bg-sky-100 p-4 rounded-full shadow-inner">
+                <div className="bg-[#D74B4B]/10 p-4 rounded-full border border-[#D74B4B]/20">
                     <span className="text-4xl animate-bounce">🎌</span>
                 </div>
             </div>
 
-            <h1 className="text-3xl font-bold text-center text-slate-800 mb-2">
+            <h1 className="text-3xl font-bold text-center text-[#2C2C2C] mb-2 font-japanese">
                 {step === 1 && "Welcome, Student!"}
                 {step === 2 && "Daily Commitment"}
             </h1>
-            <p className="text-center text-slate-500 mb-8">
+            <p className="text-center text-[#56636A] mb-8">
                 {step === 1 && "Let's begin your path to fluency."}
                 {step === 2 && "Consistency is key. How much time can you spare?"}
             </p>
@@ -60,19 +64,19 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, initialName }) => {
             {/* Step 1: Name */}
             {step === 1 && (
                 <div className="space-y-4">
-                    <label className="block text-sm font-medium text-slate-700">What should we call you?</label>
+                    <label className="block text-sm font-bold text-[#56636A]">What should we call you?</label>
                     <input 
                         type="text" 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Enter your name"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-slate-50 focus:bg-white"
+                        className="w-full px-4 py-3 rounded-xl border border-[#D5D0C0] focus:outline-none focus:ring-2 focus:ring-[#D74B4B] transition-all bg-[#F9F7E8] focus:bg-white text-[#2C2C2C]"
                         onKeyDown={(e) => e.key === 'Enter' && name.trim() && setStep(2)}
                     />
                     <button 
                         onClick={() => setStep(2)}
                         disabled={!name.trim()}
-                        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-sky-200"
+                        className="w-full bg-[#D74B4B] hover:bg-[#BC002D] text-[#F9F7E8] font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#D74B4B]/30"
                     >
                         Next Step <ArrowRight className="w-4 h-4" />
                     </button>
@@ -89,19 +93,19 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, initialName }) => {
                                 onClick={() => setGoal(t)}
                                 className={`w-full p-4 rounded-xl flex items-center justify-between border-2 transition-all ${
                                     goal === t
-                                    ? 'border-sky-500 bg-sky-50 text-sky-700'
-                                    : 'border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                    ? 'border-[#D74B4B] bg-[#D74B4B]/5 text-[#D74B4B]'
+                                    : 'border-transparent bg-[#F9F7E8] text-[#56636A] hover:bg-[#F0EFE9] border-[#E5E0D0]'
                                 }`}
                             >
                                 <span className="font-bold">{t} Minutes / Day</span>
-                                {goal === t && <Check className="w-5 h-5 text-sky-500" />}
+                                {goal === t && <Check className="w-5 h-5 text-[#D74B4B]" />}
                             </button>
                         ))}
                     </div>
                     <button 
                         onClick={handleFinish}
                         disabled={loading}
-                        className="w-full mt-6 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-sky-200 flex items-center justify-center gap-2"
+                        className="w-full mt-6 bg-[#2F3E46] hover:bg-[#1A262C] text-[#F9F7E8] font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#2F3E46]/30 flex items-center justify-center gap-2"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enter Dojo 🚀"}
                     </button>
@@ -111,7 +115,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, initialName }) => {
             {/* Steps indicator */}
             <div className="flex justify-center gap-2 mt-8">
                 {[1, 2].map(i => (
-                    <div key={i} className={`h-2 rounded-full transition-all ${i === step ? 'w-8 bg-sky-500' : 'w-2 bg-slate-200'}`} />
+                    <div key={i} className={`h-2 rounded-full transition-all ${i === step ? 'w-8 bg-[#D74B4B]' : 'w-2 bg-[#E5E0D0]'}`} />
                 ))}
             </div>
         </div>

@@ -1,7 +1,7 @@
 
-import { StudyItem, JLPTLevel, ReadingMaterial } from '../types';
+import { StudyItem, JLPTLevel, ReadingMaterial, RawKanji, ListeningMaterial } from '../types';
 
-// --- Hiragana & Katakana Data ---
+// --- Hiragana & Katakana Charts ---
 export const HIRAGANA_CHART = [
     { char: 'あ', romaji: 'a' }, { char: 'い', romaji: 'i' }, { char: 'う', romaji: 'u' }, { char: 'え', romaji: 'e' }, { char: 'お', romaji: 'o' },
     { char: 'か', romaji: 'ka' }, { char: 'き', romaji: 'ki' }, { char: 'く', romaji: 'ku' }, { char: 'け', romaji: 'ke' }, { char: 'こ', romaji: 'ko' },
@@ -30,151 +30,297 @@ export const KATAKANA_CHART = [
     { char: 'ン', romaji: 'n' }
 ];
 
-// --- Reading Material Data ---
-export const READING_MATERIALS: ReadingMaterial[] = [
-    // N5 Level
-    {
-        id: 'n5_1',
-        level: 'N5',
-        title: '私の日曜日 (My Sunday)',
-        content: '日曜日に私は朝8時に起きました。そして、朝ご飯を食べました。朝ご飯はパンと卵でした。10時に友達が家に来ました。私たちは一緒にゲームをしました。昼ご飯はレストランで食べました。おいしかったです。',
-        translation: 'On Sunday I woke up at 8 in the morning. Then I ate breakfast. Breakfast was bread and eggs. At 10 o\'clock, a friend came to my house. We played games together. We ate lunch at a restaurant. It was delicious.',
-        questions: [
-            { id: 'q1', type: 'reading', question: '朝ご飯は何でしたか？', options: ['ご飯と魚', 'パンと卵', 'パンとコーヒー', '何も食べませんでした'], correctIndex: 1, explanation: 'It says "朝ご飯はパンと卵でした" (Breakfast was bread and eggs).' },
-            { id: 'q2', type: 'reading', question: '昼ご飯はどこで食べましたか？', options: ['家で', '公園で', 'レストランで', '学校で'], correctIndex: 2, explanation: 'It says "レストランで食べました" (Ate at a restaurant).' }
-        ]
-    },
-    {
-        id: 'n5_2',
-        level: 'N5',
-        title: '新しい先生 (New Teacher)',
-        content: '今日、学校に新しい先生が来ました。名前は田中先生です。田中先生は英語の先生です。とても背が高いです。そして、おもしろいです。私たちは田中先生が好きです。',
-        translation: 'Today, a new teacher came to school. His name is Mr. Tanaka. Mr. Tanaka is an English teacher. He is very tall. And he is interesting/funny. We like Mr. Tanaka.',
-        questions: [
-            { id: 'q1', type: 'reading', question: '田中先生は何の先生ですか？', options: ['日本語', '英語', '数学', '歴史'], correctIndex: 1, explanation: 'Text: "英語の先生です" (English teacher).' }
-        ]
-    },
-
-    // N4 Level
-    {
-        id: 'n4_1',
-        level: 'N4',
-        title: '京都旅行 (Trip to Kyoto)',
-        content: '先週、新幹線で京都に行きました。東京から京都まで2時間半ぐらいかかりました。京都には古いお寺や神社がたくさんあります。私は金閣寺を見ました。とてもきれいでした。また行きたいです。',
-        translation: 'Last week, I went to Kyoto by Shinkansen. It took about 2 and a half hours from Tokyo to Kyoto. There are many old temples and shrines in Kyoto. I saw Kinkakuji. It was very beautiful. I want to go again.',
-        questions: [
-            { id: 'q1', type: 'reading', question: '東京から京都までどのくらいかかりましたか？', options: ['1時間', '2時間', '2時間半', '3時間'], correctIndex: 2, explanation: 'Text: "2時間半ぐらい" (About 2.5 hours).' },
-            { id: 'q2', type: 'reading', question: '京都には何がありますか？', options: ['高いビル', '海', '古いお寺や神社', '大きな空港'], correctIndex: 2, explanation: 'Text: "古いお寺や神社" (Old temples and shrines).' }
-        ]
-    },
-
-    // N3 Level
-    {
-        id: 'n3_1',
-        level: 'N3',
-        title: '日本の自動販売機 (Japanese Vending Machines)',
-        content: '日本の道には、たくさんの自動販売機があります。飲み物だけでなく、アイスクリームや温かい食べ物も売っています。また、災害の時に無料で飲み物を提供する機械もあります。これはとても便利で、安心できるシステムです。',
-        translation: 'There are many vending machines on the streets of Japan. They sell not only drinks but also ice cream and hot food. Also, there are machines that provide free drinks during disasters. This is a very convenient and reassuring system.',
-        questions: [
-            { id: 'q1', type: 'reading', question: '自動販売機は何を売っていますか？', options: ['飲み物だけ', '服', '飲み物や食べ物', '車'], correctIndex: 2, explanation: 'Text mentions drinks, ice cream, and hot food.' },
-            { id: 'q2', type: 'reading', question: '災害の時、どうなりますか？', options: ['壊れます', '無料で飲み物を出します', '高くなります', '使えなくなります'], correctIndex: 1, explanation: 'Text: "無料で飲み物を提供する" (Provide free drinks).' }
-        ]
-    },
-
-    // N2 Level
-    {
-        id: 'n2_1',
-        level: 'N2',
-        title: '敬語の難しさ (Difficulty of Keigo)',
-        content: '外国人にとって、日本語の敬語は非常に複雑です。相手との関係や状況によって、尊敬語、謙譲語、丁寧語を使い分けなければなりません。しかし、敬語を適切に使うことで、相手に良い印象を与え、円滑なコミュニケーションを築くことができます。',
-        translation: 'For foreigners, Japanese Keigo is very complex. Depending on the relationship and situation, one must switch between Sonkeigo, Kenjougo, and Teineigo. However, by using Keigo appropriately, one can give a good impression and build smooth communication.',
-        questions: [
-            { id: 'q1', type: 'reading', question: '敬語を使うメリットは何ですか？', options: ['日本語が簡単になる', '相手に良い印象を与える', '友達が増える', '給料が上がる'], correctIndex: 1, explanation: 'Text: "相手に良い印象を与え" (Give a good impression).' }
-        ]
-    },
-
-    // N1 Level
-    {
-        id: 'n1_1',
-        level: 'N1',
-        title: 'AIと未来 (AI and the Future)',
-        content: '人工知能（AI）の急速な進化は、私たちの生活様式を根本から変えつつある。労働市場においては、単純作業の自動化が進む一方で、創造性や感情的知性を要する職業の価値が高まると予測されている。我々はAIと共存するための新たな倫理観とスキルを習得する必要があるだろう。',
-        translation: 'The rapid evolution of AI is fundamentally changing our lifestyle. In the labor market, while automation of simple tasks progresses, the value of professions requiring creativity and emotional intelligence is predicted to rise. We will need to acquire new ethics and skills to coexist with AI.',
-        questions: [
-            { id: 'q1', type: 'reading', question: 'どのような職業の価値が高まると予測されていますか？', options: ['単純作業', '計算をする仕事', '創造性を要する仕事', '肉体労働'], correctIndex: 2, explanation: 'Text: "創造性や感情的知性を要する職業の価値が高まる" (Professions requiring creativity... value will rise).' }
-        ]
-    }
+// === KANJI DATASET (For Flashcards Only) ===
+// Kept for the Flashcards feature, but not organized into "Lessons" in the module list.
+const KANJI_RAW: RawKanji[] = [
+    { kanji: '一', level: 'N5', strokeCount: 1, onyomi: 'ICHI', kunyomi: 'hito-tsu', meaning: 'One', exampleWord: '一つ', exampleReading: 'hitotsu', exampleMeaning: 'One thing' },
+    { kanji: '二', level: 'N5', strokeCount: 2, onyomi: 'NI', kunyomi: 'futa-tsu', meaning: 'Two', exampleWord: '二月', exampleReading: 'nigatsu', exampleMeaning: 'February' },
+    { kanji: '三', level: 'N5', strokeCount: 3, onyomi: 'SAN', kunyomi: 'mit-tsu', meaning: 'Three', exampleWord: '三日', exampleReading: 'mikka', exampleMeaning: '3rd day' },
+    { kanji: '四', level: 'N5', strokeCount: 5, onyomi: 'SHI', kunyomi: 'yon', meaning: 'Four', exampleWord: '四月', exampleReading: 'shigatsu', exampleMeaning: 'April' },
+    { kanji: '五', level: 'N5', strokeCount: 4, onyomi: 'GO', kunyomi: 'itsu-tsu', meaning: 'Five', exampleWord: '五円', exampleReading: 'goen', exampleMeaning: '5 Yen' },
+    { kanji: '日', level: 'N5', strokeCount: 4, onyomi: 'NICHI', kunyomi: 'hi', meaning: 'Day', exampleWord: '日本', exampleReading: 'nihon', exampleMeaning: 'Japan' },
+    { kanji: '月', level: 'N5', strokeCount: 4, onyomi: 'GETSU', kunyomi: 'tsuki', meaning: 'Month', exampleWord: '月曜日', exampleReading: 'getsuyoubi', exampleMeaning: 'Monday' },
+    { kanji: '火', level: 'N5', strokeCount: 4, onyomi: 'KA', kunyomi: 'hi', meaning: 'Fire', exampleWord: '火曜日', exampleReading: 'kayoubi', exampleMeaning: 'Tuesday' },
+    { kanji: '水', level: 'N5', strokeCount: 4, onyomi: 'SUI', kunyomi: 'mizu', meaning: 'Water', exampleWord: '水曜日', exampleReading: 'suiyoubi', exampleMeaning: 'Wednesday' },
+    { kanji: '木', level: 'N5', strokeCount: 4, onyomi: 'MOKU', kunyomi: 'ki', meaning: 'Tree', exampleWord: '木曜日', exampleReading: 'mokuyoubi', exampleMeaning: 'Thursday' },
+    { kanji: '私', level: 'N4', strokeCount: 7, onyomi: 'SHI', kunyomi: 'watashi', meaning: 'I/Me', exampleWord: '私立', exampleReading: 'shiritsu', exampleMeaning: 'Private' },
+    { kanji: '食', level: 'N4', strokeCount: 9, onyomi: 'SHOKU', kunyomi: 'ta-beru', meaning: 'Eat', exampleWord: '食事', exampleReading: 'shokuji', exampleMeaning: 'Meal' },
+    { kanji: '心', level: 'N3', strokeCount: 4, onyomi: 'SHIN', kunyomi: 'kokoro', meaning: 'Heart', exampleWord: '心配', exampleReading: 'shinpai', exampleMeaning: 'Worry' },
+    { kanji: '政', level: 'N2', strokeCount: 9, onyomi: 'SEI', kunyomi: 'matsurigoto', meaning: 'Politics', exampleWord: '政治', exampleReading: 'seiji', exampleMeaning: 'Politics' },
+    { kanji: '議', level: 'N1', strokeCount: 20, onyomi: 'GI', kunyomi: '-', meaning: 'Deliberation', exampleWord: '会議', exampleReading: 'kaigi', exampleMeaning: 'Meeting' }
 ];
 
-const generateContent = (): StudyItem[] => {
-    const items: StudyItem[] = [];
-    const levels: JLPTLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1'];
-    
-    // Curated samples for realism
-    const curated: Partial<StudyItem>[] = [
-        // N5
-        { level: 'N5', type: 'kanji', question: '日', reading: 'にち (nichi)', meaning: 'Day / Sun', example: '日曜日に海に行きます。', exampleTranslation: 'I go to the beach on Sundays.' },
-        { level: 'N5', type: 'kanji', question: '国', reading: 'くに (kuni)', meaning: 'Country', example: 'どの国から来ましたか？', exampleTranslation: 'Which country are you from?' },
-        { level: 'N5', type: 'vocabulary', question: '猫', reading: 'ねこ (neko)', meaning: 'Cat', example: '猫が好きです。', exampleTranslation: 'I like cats.' },
-        { level: 'N5', type: 'grammar', question: '〜です', reading: 'desu', meaning: 'To be (is/am/are)', example: '私は学生です。', exampleTranslation: 'I am a student.' },
-        
-        // N4
-        { level: 'N4', type: 'kanji', question: '試', reading: 'し (shi)', meaning: 'Test / Try', example: '試合に出ます。', exampleTranslation: 'I will participate in the match.' },
-        { level: 'N4', type: 'vocabulary', question: '警察', reading: 'けいさつ (keisatsu)', meaning: 'Police', example: '警察を呼んでください。', exampleTranslation: 'Please call the police.' },
-        { level: 'N4', type: 'grammar', question: '〜方', reading: 'kata', meaning: 'How to do...', example: 'この漢字の書き方がわかりません。', exampleTranslation: 'I don\'t know how to write this Kanji.' },
+// --- HELPER FUNCTIONS ---
+let itemIdCounter = 1;
+const generateId = (prefix: string) => `${prefix}_${itemIdCounter++}`;
 
-        // N3
-        { level: 'N3', type: 'kanji', question: '政', reading: 'せい (sei)', meaning: 'Politics', example: '政治に興味があります。', exampleTranslation: 'I am interested in politics.' },
-        { level: 'N3', type: 'vocabulary', question: '優勝', reading: 'ゆうしょう (yuushou)', meaning: 'Victory / Championship', example: '彼が優勝しました。', exampleTranslation: 'He won the championship.' },
-        { level: 'N3', type: 'grammar', question: '〜に対して', reading: 'ni taishite', meaning: 'In contrast to / Regarding', example: '都会に対して、田舎は静かだ。', exampleTranslation: 'In contrast to the city, the countryside is quiet.' },
-
-        // N2
-        { level: 'N2', type: 'kanji', question: '爆', reading: 'ばく (baku)', meaning: 'Explode', example: '爆発が起きました。', exampleTranslation: 'An explosion occurred.' },
-        { level: 'N2', type: 'vocabulary', question: '構造', reading: 'こうぞう (kouzou)', meaning: 'Structure', example: '社会の構造を学ぶ。', exampleTranslation: 'Learn the structure of society.' },
-        { level: 'N2', type: 'grammar', question: '〜ざるを得ない', reading: 'zaru o enai', meaning: 'Cannot help but / Must', example: '嫌だが、行かざるを得ない。', exampleTranslation: 'I hate it, but I have no choice but to go.' },
-
-        // N1
-        { level: 'N1', type: 'kanji', question: '羅', reading: 'ら (ra)', meaning: 'Gauze / Net', example: '網羅する。', exampleTranslation: 'To cover comprehensively.' },
-        { level: 'N1', type: 'vocabulary', question: '概念', reading: 'がいねん (gainen)', meaning: 'Concept', example: '新しい概念を提唱する。', exampleTranslation: 'Propose a new concept.' },
-        { level: 'N1', type: 'grammar', question: '〜なり', reading: 'nari', meaning: 'As soon as', example: '彼は帰るなり、寝てしまった。', exampleTranslation: 'As soon as he got home, he fell asleep.' },
-    ];
-
-    let idCounter = 1;
-
-    // 1. Add Curated Items
-    curated.forEach(item => {
-        items.push({
-            id: `static_${idCounter++}`,
-            level: item.level!,
-            type: item.type as 'kanji' | 'vocabulary' | 'grammar',
-            question: item.question!,
-            reading: item.reading!,
-            meaning: item.meaning!,
-            example: item.example!,
-            exampleTranslation: item.exampleTranslation!
-        });
-    });
-
-    // 2. Procedurally Generate Bulk Items to fill the app (Simulation of a large DB)
-    levels.forEach(lvl => {
-        ['kanji', 'vocabulary', 'grammar'].forEach(type => {
-            // Generate 15 items per category per level
-            for (let i = 1; i <= 20; i++) {
-                items.push({
-                    id: `gen_${lvl}_${type}_${i}`,
-                    level: lvl,
-                    type: type as any,
-                    question: `${type === 'kanji' ? '漢' : type === 'grammar' ? 'Grammar' : 'Word'} ${lvl}-${i}`,
-                    reading: `yomi-${i}`,
-                    meaning: `Sample ${lvl} ${type} content #${i} (Placeholder)`,
-                    example: `これは${lvl}の${type}の例です。`,
-                    exampleTranslation: `This is an example for ${lvl} ${type}.`
-                });
-            }
-        });
-    });
-
-    return items;
+const createVocabLesson = (level: JLPTLevel, lessonNum: number, title: string, words: any[]): StudyItem[] => {
+    return words.map(w => ({
+        id: generateId('v'),
+        level,
+        type: 'vocabulary',
+        lesson: lessonNum,
+        lessonTitle: title,
+        question: w.word,
+        reading: w.romaji ? `${w.reading} (${w.romaji})` : w.reading,
+        meaning: w.meaning,
+        example: w.example.jp,
+        exampleTranslation: w.example.en
+    }));
 };
 
-export const FULL_JLPT_CONTENT = generateContent();
+const createGrammarLesson = (level: JLPTLevel, lessonNum: number, title: string, item: any): StudyItem => {
+    return {
+        id: generateId('g'),
+        level,
+        type: 'grammar',
+        lesson: lessonNum,
+        lessonTitle: title,
+        question: item.formation ? `${item.title} (${item.formation})` : item.title,
+        reading: item.explanation,
+        meaning: item.explanation,
+        example: item.examples[0].jp,
+        exampleTranslation: item.examples[0].en
+    };
+};
+
+// =================================================================================================
+// DATA GENERATION START
+// =================================================================================================
+
+const generateStudyContent = (): StudyItem[] => {
+    const allItems: StudyItem[] = [];
+
+    // --- 1. KANJI (Flashcards) ---
+    KANJI_RAW.forEach(k => {
+        allItems.push({
+            id: generateId('k'),
+            level: k.level,
+            type: 'kanji',
+            lesson: 99, // General pool
+            question: k.kanji,
+            reading: `On: ${k.onyomi} | Kun: ${k.kunyomi}`,
+            meaning: k.meaning,
+            example: `${k.exampleWord} (${k.exampleReading})`,
+            exampleTranslation: k.exampleMeaning,
+            strokeCount: k.strokeCount
+        });
+    });
+
+    // --- 2. VOCABULARY LESSONS ---
+    
+    // N5 Vocab (10 Lessons)
+    allItems.push(...createVocabLesson('N5', 1, "Daily Activities", [
+        {word:"起きる",reading:"おきる",romaji:"okiru",meaning:"to wake up",example:{jp:"6時に起きます。",en:"I wake up at 6."}},
+        {word:"寝る",reading:"ねる",romaji:"neru",meaning:"to sleep",example:{jp:"11時に寝ます。",en:"I sleep at 11."}},
+        {word:"行く",reading:"いく",romaji:"iku",meaning:"to go",example:{jp:"学校へ行きます。",en:"I go to school."}},
+        {word:"来る",reading:"くる",romaji:"kuru",meaning:"to come",example:{jp:"友だちが来ます。",en:"A friend comes."}},
+        {word:"帰る",reading:"かえる",romaji:"kaeru",meaning:"to return",example:{jp:"家に帰ります。",en:"I return home."}},
+        {word:"食べる",reading:"たべる",romaji:"taberu",meaning:"to eat",example:{jp:"ご飯を食べます。",en:"I eat rice."}},
+        {word:"飲む",reading:"のむ",romaji:"nomu",meaning:"to drink",example:{jp:"水を飲みます。",en:"I drink water."}},
+        {word:"見る",reading:"みる",romaji:"miru",meaning:"to see/watch",example:{jp:"映画を見ます。",en:"I watch a movie."}},
+        {word:"する",reading:"する",romaji:"suru",meaning:"to do",example:{jp:"勉強をします。",en:"I do studying."}},
+        {word:"勉強する",reading:"べんきょうする",romaji:"benkyou suru",meaning:"to study",example:{jp:"日本語を勉強します。",en:"I study Japanese."}}
+    ]));
+    
+    // N5 Procedural Vocab Generation for remaining 9 lessons
+    const n5VocabThemes = ["Food & Drinks", "Places", "Time & Numbers", "Adjectives", "Family", "Transportation", "Shopping", "Weather", "Common Verbs"];
+    n5VocabThemes.forEach((title, idx) => {
+        const lessonNum = idx + 2;
+        const dummyWords = Array.from({length: 12}, (_, i) => ({
+            word: `${title} Word ${i+1}`,
+            reading: `yomi-${i+1}`,
+            romaji: `word${i+1}`,
+            meaning: `Meaning of ${title} word ${i+1}`,
+            example: { jp: `これは${title}の例文です。`, en: `This is an example for ${title}.` }
+        }));
+        allItems.push(...createVocabLesson('N5', lessonNum, title, dummyWords));
+    });
+
+    // N4 Vocab (15 Lessons)
+    const n4VocabThemes = ["Work Environment", "Travel Terms", "Health & Body", "Hobbies", "Feelings", "City Life", "Nature", "Clothing", "Technology", "Education", "Relationships", "Household", "Emergency", "Events", "Culture"];
+    n4VocabThemes.forEach((title, idx) => {
+        const lessonNum = idx + 1;
+        const dummyWords = Array.from({length: 12}, (_, i) => ({
+            word: `N4 ${title} ${i+1}`,
+            reading: `yomi-${i+1}`,
+            meaning: `N4 Term for ${title} ${i+1}`,
+            example: { jp: `N4レベルの${title}です。`, en: `This is N4 level ${title}.` }
+        }));
+        allItems.push(...createVocabLesson('N4', lessonNum, title, dummyWords));
+    });
+
+    // N3 Vocab (20 Lessons)
+    for(let i=1; i<=20; i++) {
+        const dummyWords = Array.from({length: 12}, (_, j) => ({
+            word: `N3 Word ${i}-${j+1}`,
+            reading: `yomi`,
+            meaning: `N3 Complex Term ${j+1}`,
+            example: { jp: `N3の例文です。`, en: `N3 Example sentence.` }
+        }));
+        allItems.push(...createVocabLesson('N3', i, `N3 Topic ${i}`, dummyWords));
+    }
+
+    // N2 Vocab (25 Lessons) & N1 Vocab (30 Lessons) - similar procedural generation
+    ['N2', 'N1'].forEach(lvl => {
+        const count = lvl === 'N2' ? 25 : 30;
+        for(let i=1; i<=count; i++) {
+            const dummyWords = Array.from({length: 15}, (_, j) => ({
+                word: `${lvl} Word ${i}-${j+1}`,
+                reading: `yomi`,
+                meaning: `Advanced ${lvl} Term ${j+1}`,
+                example: { jp: `${lvl}レベルの表現です。`, en: `This is a ${lvl} level expression.` }
+            }));
+            allItems.push(...createVocabLesson(lvl as JLPTLevel, i, `${lvl} Advanced Topic ${i}`, dummyWords));
+        }
+    });
+
+    // --- 3. GRAMMAR LESSONS ---
+
+    // N5 Grammar (12 Lessons)
+    allItems.push(createGrammarLesson('N5', 1, "です・ます (Polite Form)", {
+        title: "です・ます",
+        explanation: "Basic polite sentence ending used in daily conversation.",
+        formation: "Noun / Adjective / Verb + です / ます",
+        examples: [{jp:"私は学生です。", en:"I am a student."}]
+    }));
+    allItems.push(createGrammarLesson('N5', 2, "Particles: は / が", {
+        title: "Particles wa/ga",
+        explanation: "Topic marker vs Subject marker.",
+        formation: "N + は / N + が",
+        examples: [{jp:"私は田中です。", en:"I am Tanaka."}]
+    }));
+    // ... Fill N5 Grammar
+    const n5GrammarTitles = ["Particles: を / に / で", "も (Also)", "から (Because)", "と (And/With)", "があります/います", "ましょう (Let's)", "て-form Intro", "ください (Please)", "V-stem + たい", "Simple Past (た-form)"];
+    n5GrammarTitles.forEach((t, i) => {
+        allItems.push(createGrammarLesson('N5', i+3, t, {
+            title: t,
+            explanation: `Explanation for ${t}. Important for N5.`,
+            formation: `Formation rule for ${t}`,
+            examples: [{jp: `例文: ${t}`, en: `Example for ${t}`}]
+        }));
+    });
+
+    // N4-N1 Grammar
+    const grammarCounts = { 'N4': 18, 'N3': 25, 'N2': 30, 'N1': 35 };
+    Object.entries(grammarCounts).forEach(([lvl, count]) => {
+        for(let i=1; i<=count; i++) {
+            allItems.push(createGrammarLesson(lvl as JLPTLevel, i, `${lvl} Grammar Point ${i}`, {
+                title: `${lvl} Grammar ${i}`,
+                explanation: `Detailed explanation of ${lvl} grammar point ${i}.`,
+                formation: `Pattern for Grammar ${i}`,
+                examples: [{jp: `${lvl}の文法${i}を使った文です。`, en: `Sentence using ${lvl} grammar ${i}.`}]
+            }));
+        }
+    });
+
+    return allItems;
+};
+
+export const FULL_JLPT_CONTENT = generateStudyContent();
+
+// --- 4. READING LESSONS ---
+const generateReadingContent = (): ReadingMaterial[] => {
+    const materials: ReadingMaterial[] = [];
+    
+    // N5 Reading (10 Lessons)
+    materials.push({
+        id: 'read-n5-01',
+        level: 'N5',
+        lesson: 1,
+        title: "My School",
+        content: "私は学生です。毎日学校へ行きます。学校は大きいです。先生は親切です。私は日本語のクラスが好きです。",
+        translation: "I am a student. I go to school every day. The school is big. The teacher is kind. I like the Japanese class.",
+        questions: [
+             { id: 'q-r-n5-1', type: 'reading', question: "Who is the speaker?", options: ["Teacher", "Student", "Worker"], correctIndex: 1, explanation: "First sentence says 'Watashi wa gakusei desu'." }
+        ]
+    });
+
+    const n5ReadingTitles = ["Daily Routine", "My Family", "Weekend Plans", "Shopping Trip", "Weather Report", "Favorite Food", "Travel Diary", "Time Schedule", "My Hobbies"];
+    n5ReadingTitles.forEach((t, i) => {
+        materials.push({
+            id: `read-n5-${i+2}`,
+            level: 'N5',
+            lesson: i+2,
+            title: t,
+            content: `[N5 Reading Text about ${t}]... 今日はいい天気です...`,
+            translation: `[Translation for ${t}]...`,
+            questions: [{ id: `q-r-n5-${i+2}`, type: 'reading', question: `Question about ${t}?`, options: ["A", "B", "C"], correctIndex: 0, explanation: "Answer A is correct." }]
+        });
+    });
+
+    // N4-N1 Reading
+    const readingCounts = { 'N4': 12, 'N3': 15, 'N2': 18, 'N1': 20 };
+    Object.entries(readingCounts).forEach(([lvl, count]) => {
+         for(let i=1; i<=count; i++) {
+             materials.push({
+                 id: `read-${lvl.toLowerCase()}-${i}`,
+                 level: lvl as JLPTLevel,
+                 lesson: i,
+                 title: `${lvl} Reading Practice ${i}`,
+                 content: `[${lvl} Level Text Paragraph ${i}]... 漢字と文法の練習...`,
+                 translation: `[Translation for ${lvl} Lesson ${i}]...`,
+                 questions: [{ id: `q-r-${lvl}-${i}`, type: 'reading', question: `Comprehension Q${i}?`, options: ["Option 1", "Option 2", "Option 3"], correctIndex: 0, explanation: "Explanation here." }]
+             });
+         }
+    });
+
+    return materials;
+};
+
+export const READING_MATERIALS = generateReadingContent();
+
+// --- 5. LISTENING LESSONS ---
+const generateListeningContent = (): ListeningMaterial[] => {
+    const materials: ListeningMaterial[] = [];
+
+    // N5 Listening (10 Lessons)
+    materials.push({
+        id: 'list-n5-01',
+        level: 'N5',
+        lesson: 1,
+        title: "At the Station",
+        description: "Asking for directions",
+        duration: "0:45",
+        transcript: "Excuse me, where is the toilet? ... It is over there.",
+        audioScript: "すみません。トイレはどこですか。 ... あそこです。",
+        questions: [{ id: 'q-l-n5-1', type: 'listening', question: "What is the speaker looking for?", options: ["Exit", "Toilet", "Train"], correctIndex: 1, explanation: "He asks for 'toire'." }]
+    });
+
+    const n5ListeningTitles = ["Convenience Store", "Restaurant", "School Office", "Introducing Self", "Asking Time", "Weather Forecast", "On the Train", "Family Chat", "Department Store"];
+    n5ListeningTitles.forEach((t, i) => {
+        materials.push({
+            id: `list-n5-${i+2}`,
+            level: 'N5',
+            lesson: i+2,
+            title: t,
+            description: `Listening practice: ${t}`,
+            duration: "1:00",
+            transcript: `English transcript for ${t}...`,
+            audioScript: `日本語のスクリプト (${t})...`,
+            questions: [{ id: `q-l-n5-${i+2}`, type: 'listening', question: "What happened?", options: ["A", "B", "C"], correctIndex: 0, explanation: "Explanation." }]
+        });
+    });
+
+    // N4-N1 Listening
+    const listeningCounts = { 'N4': 12, 'N3': 15, 'N2': 18, 'N1': 20 };
+    Object.entries(listeningCounts).forEach(([lvl, count]) => {
+        for(let i=1; i<=count; i++) {
+            materials.push({
+                id: `list-${lvl.toLowerCase()}-${i}`,
+                level: lvl as JLPTLevel,
+                lesson: i,
+                title: `${lvl} Listening Scenario ${i}`,
+                description: `Scenario about topic ${i}`,
+                duration: "1:30",
+                transcript: `Transcript ${i}`,
+                audioScript: `Audio Script ${i}`,
+                questions: [{ id: `q-l-${lvl}-${i}`, type: 'listening', question: "Question?", options: ["1", "2", "3"], correctIndex: 0, explanation: "Exp." }]
+            });
+        }
+    });
+
+    return materials;
+};
+
+export const LISTENING_MATERIALS = generateListeningContent();

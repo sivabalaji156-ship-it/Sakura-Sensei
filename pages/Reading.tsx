@@ -1,36 +1,52 @@
+
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/db';
 import { ReadingMaterial } from '../types';
-import { BookOpen, HelpCircle, CheckCircle, XCircle } from 'lucide-react';
+import { BookOpen, HelpCircle, ChevronDown, Book } from 'lucide-react';
 
 const Reading: React.FC = () => {
   const [materials, setMaterials] = useState<ReadingMaterial[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<ReadingMaterial | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
+  // Grouping state if we still want to group, or just expanding individual items.
+  // Given the requirement for specific lessons, a simple list or grouped by chunks is fine.
+  // The new data has unique titles.
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load all reading materials for now, could filter by user level
-    const allMaterials = [
-        ...db.getReadingMaterials('N5'),
-        ...db.getReadingMaterials('N4'),
-        ...db.getReadingMaterials('N3'),
-        ...db.getReadingMaterials('N2'),
-        ...db.getReadingMaterials('N1'),
-    ];
-    setMaterials(allMaterials);
+    // Load materials for current user level
+    const currentUser = db.getCurrentUser();
+    const level = currentUser?.level || 'N5';
+    const levelMaterials = db.getReadingMaterials(level);
+    setMaterials(levelMaterials);
   }, []);
 
   const handleSelect = (m: ReadingMaterial) => {
       setSelectedMaterial(m);
       setAnswers({});
       setShowResults(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAnswer = (qId: string, optionIdx: number) => {
       if (showResults) return;
       setAnswers(prev => ({ ...prev, [qId]: optionIdx }));
   };
+
+  // Group materials by blocks of 5 for easier navigation
+  const groupedMaterials = materials.reduce((acc, curr) => {
+      const start = Math.floor((curr.lesson - 1) / 5) * 5 + 1;
+      const end = start + 4;
+      const groupKey = `Lessons ${start} - ${end}`;
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(curr);
+      return acc;
+  }, {} as Record<string, ReadingMaterial[]>);
+
+  const toggleGroup = (id: string) => {
+      setExpandedGroup(prev => prev === id ? null : id);
+  }
 
   if (selectedMaterial) {
       return (
@@ -44,15 +60,17 @@ const Reading: React.FC = () => {
                   <div className="bg-white p-8 rounded-3xl shadow-lg border border-[#E5E0D0] h-fit">
                       <div className="flex items-center gap-2 mb-4">
                           <span className="bg-[#EBE9DE] text-[#56636A] border border-[#D5D0C0] px-3 py-1 rounded-full text-xs font-bold">{selectedMaterial.level}</span>
-                          <h2 className="text-2xl font-bold font-japanese text-[#2C2C2C]">{selectedMaterial.title}</h2>
+                          <span className="bg-[#D74B4B]/10 text-[#D74B4B] border border-[#D74B4B]/20 px-3 py-1 rounded-full text-xs font-bold">L{selectedMaterial.lesson}</span>
                       </div>
-                      <div className="prose prose-lg text-[#2C2C2C] font-japanese leading-loose mb-8 text-lg">
+                      <h2 className="text-2xl font-bold font-japanese text-[#2C2C2C] mb-6">{selectedMaterial.title}</h2>
+                      
+                      <div className="prose prose-lg text-[#2C2C2C] font-japanese leading-loose mb-8 text-lg whitespace-pre-wrap">
                           {selectedMaterial.content}
                       </div>
                       
                       <div className="bg-[#F9F7E8] p-4 rounded-xl border border-[#E5E0D0]">
                           <h4 className="font-bold text-[#56636A] text-sm mb-2 uppercase">Translation</h4>
-                          <p className="text-[#8E9AAF] italic text-sm">{selectedMaterial.translation}</p>
+                          <p className="text-[#8E9AAF] italic text-sm whitespace-pre-wrap">{selectedMaterial.translation}</p>
                       </div>
                   </div>
 
@@ -120,28 +138,46 @@ const Reading: React.FC = () => {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {materials.map(m => (
-                <div 
-                    key={m.id}
-                    onClick={() => handleSelect(m)}
-                    className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:shadow-lg hover:border-[#D74B4B]/50 hover:-translate-y-1 transition-all cursor-pointer group"
-                >
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform">
-                            <BookOpen className="w-6 h-6" />
+        <div className="space-y-4">
+            {Object.keys(groupedMaterials).sort((a,b) => parseInt(a.match(/\d+/)?.[0]||'0') - parseInt(b.match(/\d+/)?.[0]||'0')).map((groupName) => (
+                <div key={groupName} className="bg-white rounded-2xl shadow-sm border border-[#E5E0D0] overflow-hidden">
+                    <button 
+                        onClick={() => toggleGroup(groupName)}
+                        className="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-[#F9F7E8] transition-colors"
+                    >
+                        <div className="flex items-center gap-4">
+                            <span className="p-2.5 rounded-xl text-white shadow-sm bg-[#D74B4B]">
+                                <Book className="w-5 h-5" />
+                            </span>
+                            <h3 className="text-lg font-bold text-[#2C2C2C] font-japanese">{groupName}</h3>
                         </div>
-                        <span className={`px-2 py-1 rounded-md text-xs font-bold ${
-                            m.level === 'N5' ? 'bg-green-100 text-green-700 border border-green-200' : 
-                            m.level === 'N4' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                            m.level === 'N3' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                            'bg-orange-100 text-orange-700 border border-orange-200'
-                        }`}>
-                            {m.level}
-                        </span>
-                    </div>
-                    <h3 className="text-xl font-bold font-japanese mb-2 text-[#2C2C2C] group-hover:text-[#D74B4B] transition-colors">{m.title}</h3>
-                    <p className="text-[#8E9AAF] text-sm line-clamp-2">{m.translation}</p>
+                        <div className={`p-1 rounded-full transition-transform duration-300 ${expandedGroup === groupName ? 'rotate-180 bg-[#E5E0D0]' : ''}`}>
+                            <ChevronDown className="w-5 h-5 text-[#8E9AAF]" />
+                        </div>
+                    </button>
+
+                    {expandedGroup === groupName && (
+                        <div className="p-5 border-t border-[#E5E0D0] bg-[#FDFCF8] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                            {groupedMaterials[groupName].sort((a,b) => a.lesson - b.lesson).map(m => (
+                                <div 
+                                    key={m.id}
+                                    onClick={() => handleSelect(m)}
+                                    className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:shadow-lg hover:border-[#D74B4B]/50 hover:-translate-y-1 transition-all cursor-pointer group"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform">
+                                            <BookOpen className="w-6 h-6" />
+                                        </div>
+                                        <span className="px-2 py-1 rounded-md text-xs font-bold bg-[#F9F7E8] text-[#56636A] border border-[#D5D0C0]">
+                                            Lesson {m.lesson}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-xl font-bold font-japanese mb-2 text-[#2C2C2C] group-hover:text-[#D74B4B] transition-colors line-clamp-1">{m.title}</h3>
+                                    <p className="text-[#8E9AAF] text-sm line-clamp-2">{m.translation}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             ))}
         </div>
