@@ -6,7 +6,6 @@ import { JLPTLevel } from "../types";
 const getApiKey = () => {
     try {
         // Double check process existence before accessing properties
-        // In some bundlers process is not polyfilled, so we check typeof process first
         if (typeof process !== 'undefined' && process && process.env && process.env.API_KEY) {
             return process.env.API_KEY;
         }
@@ -24,6 +23,7 @@ let ai: GoogleGenAI | null = null;
 const getAiClient = () => {
     if (!ai && API_KEY) {
         try {
+            // Initialization for @google/genai 0.3.0
             ai = new GoogleGenAI({ apiKey: API_KEY });
         } catch (e) {
             console.error("Failed to init GoogleGenAI", e);
@@ -56,11 +56,12 @@ export const initChat = (level: JLPTLevel) => {
     if (!client) return;
     
     try {
+        // Updated to use the recommended model for text tasks
         chatSession = client.chats.create({
             model: 'gemini-3-flash-preview',
             config: {
-            systemInstruction: `${SENSEI_PERSONA} The current student is studying for **${level}**. Adjust your complexity accordingly.`,
-            temperature: 0.7,
+                systemInstruction: `${SENSEI_PERSONA} The current student is studying for **${level}**. Adjust your complexity accordingly.`,
+                temperature: 0.7,
             },
         });
     } catch (e) {
@@ -80,10 +81,11 @@ export const sendMessageToSensei = async (message: string): Promise<string> => {
         if (!chatSession) return "Sensei is offline right now (Check connection).";
     }
     
-    // Non-null assertion safe because of check above, but TS might complain so we check again
     if (chatSession) {
-        const result = await chatSession.sendMessage({ message });
-        const response = result as GenerateContentResponse;
+        // In @google/genai 0.3.0, sendMessage takes { message: string }
+        const response: GenerateContentResponse = await chatSession.sendMessage({ message });
+        
+        // response.text is a getter in the new SDK
         return response.text || "Hmm, I'm thinking... please ask again! 🤔";
     }
     return "Sensei connection error.";
@@ -98,6 +100,7 @@ export const generateStudyPlan = async (level: JLPTLevel, daysLeft: number): Pro
     if (!client) return "Set API Key for AI Plans. (Simulated Plan: Study Genki I Ch. 1)";
     
     try {
+        // Using generateContent with the updated model
         const response = await client.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Generate a **one-day study plan** (markdown) for a student taking JLPT ${level} in ${daysLeft} days. 
