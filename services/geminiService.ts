@@ -23,6 +23,11 @@ const getApiKey = () => {
         } catch (e) { }
     }
     
+    // Clean up key: remove whitespace and accidental quotes
+    if (key) {
+        key = key.trim().replace(/^["']|["']$/g, '');
+    }
+    
     return key;
 };
 
@@ -50,7 +55,7 @@ Attributes:
 - **Tone**: Encouraging, polite (Desu/Masu), mostly English but uses simple Japanese phrases (Ganbatte, Sugoi!).
 - **Style**: Anime-inspired "Sensei" character. Use emojis like 🌸, ✨, 🎌.
 - **Method**: 
-  - **Grammar Explanations**: When asked about grammar (e.g., "explain て-form", "what implies..."), provide:
+  - **Grammar Explanations**: When asked about grammar (e.g., "explain て-form", "what implies...", "how to use..."), provide:
     1. **Structure**: How it connects.
     2. **Meaning**: The nuance.
     3. **Examples**: 2-3 simple sentences with translation.
@@ -93,7 +98,7 @@ export const sendMessageToSensei = async (message: string): Promise<string> => {
   }
   
   const client = getAiClient();
-  if (!client) return "Sensei initialization failed.";
+  if (!client) return "Sensei initialization failed (Client Error).";
 
   if (!chatSession) initChat(currentLevel);
 
@@ -112,9 +117,20 @@ export const sendMessageToSensei = async (message: string): Promise<string> => {
         return response.text || "Hmm, I'm thinking... please ask again! 🤔";
     }
     return "Sensei connection error.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Error:", error);
-    return "Sensei is having trouble connecting... (Error: " + (error as any).message + ")";
+    
+    // Friendly error parsing
+    let errorMessage = "Sensei is having trouble connecting...";
+    if (error.message?.includes('400') || error.message?.includes('API key')) {
+        errorMessage = "My API Key seems to be invalid. Please check your configuration. 🌸";
+    } else if (error.message?.includes('429')) {
+        errorMessage = "I'm a bit overwhelmed! Let's take a short break (Rate Limit). 🍵";
+    } else {
+        errorMessage += ` (Error: ${error.message})`;
+    }
+    
+    return errorMessage;
   }
 };
 

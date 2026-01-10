@@ -1,11 +1,19 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, JLPTLevel } from '../types';
 import { sendMessageToSensei, initChat } from '../services/geminiService';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, HelpCircle } from 'lucide-react';
 
 interface GeminiCoachProps {
   level: JLPTLevel;
 }
+
+const SUGGESTIONS = [
+    { label: "Explain 'Te-form'", prompt: "Explain how to make and use the Te-form (て形)." },
+    { label: "Difference: は vs が", prompt: "What is the difference between particles は (wa) and が (ga)?" },
+    { label: "Past Tense", prompt: "How do I conjugate verbs to past tense?" },
+    { label: "Counting Objects", prompt: "Explain the Japanese counters (tsu, ko, mai) simply." }
+];
 
 const GeminiCoach: React.FC<GeminiCoachProps> = ({ level }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -28,13 +36,14 @@ const GeminiCoach: React.FC<GeminiCoachProps> = ({ level }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (textOverride?: string) => {
+    const textToSend = textOverride || input;
+    if (!textToSend.trim() || isLoading) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      text: input,
+      text: textToSend,
       timestamp: Date.now()
     };
 
@@ -72,7 +81,7 @@ const GeminiCoach: React.FC<GeminiCoachProps> = ({ level }) => {
         <div>
             <h3 className="font-bold text-white">Sakura Sensei (AI)</h3>
             <p className="text-xs text-[#8E9AAF] font-semibold flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> Online
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> Online • {level} Coach
             </p>
         </div>
       </div>
@@ -104,6 +113,21 @@ const GeminiCoach: React.FC<GeminiCoachProps> = ({ level }) => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Suggestion Chips */}
+      {!isLoading && messages.length < 4 && (
+          <div className="px-4 py-2 bg-[#F9F7E8] border-t border-[#E5E0D0] flex gap-2 overflow-x-auto custom-scrollbar">
+              {SUGGESTIONS.map((s, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => handleSend(s.prompt)}
+                    className="whitespace-nowrap px-3 py-1.5 bg-white border border-[#E5E0D0] rounded-full text-xs font-bold text-[#56636A] hover:bg-[#D74B4B] hover:text-white hover:border-[#D74B4B] transition-colors flex items-center gap-1"
+                  >
+                      <HelpCircle className="w-3 h-3" /> {s.label}
+                  </button>
+              ))}
+          </div>
+      )}
+
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-[#E5E0D0]">
         <div className="flex gap-2">
@@ -112,11 +136,11 @@ const GeminiCoach: React.FC<GeminiCoachProps> = ({ level }) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about Japanese grammar..."
+                placeholder="Ask about grammar, vocab, or usage..."
                 className="flex-1 px-4 py-3 rounded-xl border border-[#D5D0C0] bg-[#F9F7E8] text-[#2C2C2C] focus:outline-none focus:ring-2 focus:ring-[#D74B4B] focus:border-transparent transition-all placeholder:text-[#8E9AAF]"
             />
             <button 
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim() || isLoading}
                 className="bg-[#D74B4B] hover:bg-[#BC002D] text-white p-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#D74B4B]/30"
             >

@@ -10,7 +10,9 @@ import {
   CheckCircle2, 
   ArrowRight,
   Award,
-  Zap
+  Zap,
+  Info,
+  Scroll
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -52,12 +54,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     Ready to conquer new Kanji?
                 </p>
                 
-                <button 
-                    onClick={() => navigate('/flashcards')}
-                    className="bg-[#D74B4B] text-[#F9F7E8] px-8 py-4 rounded-xl font-bold shadow-lg shadow-[#D74B4B]/30 hover:bg-[#BC002D] transition-all flex items-center gap-2"
-                >
-                    <Play className="w-5 h-5 fill-[#F9F7E8]" /> Continue Learning
-                </button>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => navigate('/flashcards')}
+                        className="bg-[#D74B4B] text-[#F9F7E8] px-8 py-4 rounded-xl font-bold shadow-lg shadow-[#D74B4B]/30 hover:bg-[#BC002D] transition-all flex items-center gap-2"
+                    >
+                        <Play className="w-5 h-5 fill-[#F9F7E8]" /> Continue Learning
+                    </button>
+                </div>
             </div>
 
             {/* Streak Counter Widget */}
@@ -72,6 +76,53 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 <span className="text-xs font-bold text-orange-600 uppercase tracking-widest">Day Streak</span>
             </div>
         </div>
+      </div>
+
+      {/* --- EXAM GUIDE & ACTIONS SECTION --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Exam Rules Card (Special Feature) */}
+          <div 
+            onClick={() => navigate('/exam-rules')}
+            className="lg:col-span-3 bg-[#2F3E46] p-6 rounded-2xl shadow-md cursor-pointer group relative overflow-hidden flex items-center justify-between"
+          >
+              <div className="relative z-10 flex items-center gap-4">
+                  <div className="p-3 bg-[#D74B4B] rounded-xl text-white shadow-lg group-hover:scale-110 transition-transform">
+                      <Scroll className="w-6 h-6" />
+                  </div>
+                  <div>
+                      <h3 className="text-xl font-bold text-white mb-1">Examination Guide & Rules</h3>
+                      <p className="text-gray-300 text-sm">View pass marks, scoring criteria, and time limits for N5 - N1.</p>
+                  </div>
+              </div>
+              <div className="relative z-10 bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors">
+                  <ArrowRight className="w-5 h-5 text-white" />
+              </div>
+              
+              {/* Background Pattern */}
+              <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-black/20 to-transparent pointer-events-none" />
+              <Info className="absolute -bottom-4 -right-4 w-32 h-32 text-white/5 pointer-events-none" />
+          </div>
+
+          {/* Quick Actions */}
+           <div onClick={() => navigate('/kana')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
+               <div className="w-12 h-12 bg-[#2F3E46]/10 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-[#2F3E46]">あ</div>
+               <h4 className="font-bold text-[#2C2C2C] text-lg">Kana</h4>
+               <p className="text-[#8E9AAF] text-sm">Master the basics.</p>
+           </div>
+           
+           <div onClick={() => navigate('/reading')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
+               <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-sky-600">📖</div>
+               <h4 className="font-bold text-[#2C2C2C] text-lg">Stories</h4>
+               <p className="text-[#8E9AAF] text-sm">Read stories for your level.</p>
+           </div>
+
+           <div onClick={() => navigate('/badges')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
+               <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-yellow-600">
+                    <Award />
+               </div>
+               <h4 className="font-bold text-[#2C2C2C] text-lg">Trophies</h4>
+               <p className="text-[#8E9AAF] text-sm">View your achievements.</p>
+           </div>
       </div>
 
       {/* Level Roadmap */}
@@ -116,29 +167,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   )
               })}
           </div>
-      </div>
-
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div onClick={() => navigate('/kana')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
-               <div className="w-12 h-12 bg-[#2F3E46]/10 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-[#2F3E46]">あ</div>
-               <h4 className="font-bold text-[#2C2C2C] text-lg">Kana</h4>
-               <p className="text-[#8E9AAF] text-sm">Master the basics.</p>
-           </div>
-           
-           <div onClick={() => navigate('/reading')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
-               <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-sky-600">📖</div>
-               <h4 className="font-bold text-[#2C2C2C] text-lg">Stories</h4>
-               <p className="text-[#8E9AAF] text-sm">Read stories for your level.</p>
-           </div>
-
-           <div onClick={() => navigate('/badges')} className="bg-white p-6 rounded-2xl shadow-sm border border-[#E5E0D0] hover:border-[#D74B4B]/50 hover:shadow-lg transition-all cursor-pointer group">
-               <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform text-yellow-600">
-                    <Award />
-               </div>
-               <h4 className="font-bold text-[#2C2C2C] text-lg">Trophies</h4>
-               <p className="text-[#8E9AAF] text-sm">View your achievements.</p>
-           </div>
       </div>
 
     </div>

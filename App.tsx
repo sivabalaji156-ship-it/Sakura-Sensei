@@ -20,6 +20,7 @@ import Streak from './pages/Streak';
 import Profile from './pages/Profile';
 import Progress from './pages/Progress';
 import KanjiPractice from './pages/KanjiPractice';
+import ExamRules from './pages/ExamRules';
 import { UserProfile } from './types';
 import { db, onUserUpdate } from './services/db';
 
@@ -120,6 +121,7 @@ const App: React.FC = () => {
                             <Route path="streak" element={<Streak user={user} />} />
                             <Route path="profile" element={<Profile />} />
                             <Route path="progress" element={<Progress />} />
+                            <Route path="exam-rules" element={<ExamRules />} />
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                     </Layout>

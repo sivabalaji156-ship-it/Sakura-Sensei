@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { db } from '../services/db';
+import { db, onUserUpdate } from '../services/db';
 import { UserProfile, JLPTLevel } from '../types';
 import { BADGES } from '../constants';
 import { 
@@ -29,12 +29,26 @@ const Progress: React.FC = () => {
   const [showRoadmap, setShowRoadmap] = useState(false);
 
   useEffect(() => {
-    const u = db.getCurrentUser();
-    if (u) {
-        setUser(u);
-        setProgress(db.getProgress(u.level));
+    const loadData = () => {
+        const u = db.getCurrentUser();
+        if (u) {
+            setUser(u);
+            setProgress(db.getProgress(u.level));
+            setTestHistory(db.getTestHistory());
+        }
+    };
+
+    loadData();
+
+    // Subscribe to real-time updates
+    const unsubscribe = onUserUpdate((updatedUser) => {
+        setUser(updatedUser);
+        // Refresh derived data
+        setProgress(db.getProgress(updatedUser.level));
         setTestHistory(db.getTestHistory());
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (!user) return <div className="p-10 text-center text-[#D74B4B]">Summoning Data...</div>;
