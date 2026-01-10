@@ -13,10 +13,12 @@ import {
     Sword, 
     Crown, 
     Star,
-    Award
+    Award,
+    ChevronRight,
+    Lock
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const MotionDiv = motion.div as any;
 
@@ -24,6 +26,7 @@ const Progress: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [progress, setProgress] = useState({ kanji: 0, vocabulary: 0, grammar: 0 });
   const [testHistory, setTestHistory] = useState<any[]>([]);
+  const [showRoadmap, setShowRoadmap] = useState(false);
 
   useEffect(() => {
     const u = db.getCurrentUser();
@@ -36,7 +39,6 @@ const Progress: React.FC = () => {
 
   if (!user) return <div className="p-10 text-center text-[#D74B4B]">Summoning Data...</div>;
 
-  // --- RPG Logic ---
   const levelNames: Record<string, string> = { 
     N5: 'Genin (Novice)', 
     N4: 'Chunin (Intermediate)', 
@@ -45,12 +47,16 @@ const Progress: React.FC = () => {
     N1: 'Kage (Legend)' 
   };
 
-  const calculateRank = (xp: number) => {
-      // Simplified XP thresholds for visual rank progress within current JLPT level
-      const threshold = 1000; 
-      const currentRankProgress = (xp % threshold) / threshold * 100;
-      return currentRankProgress;
+  const XP_THRESHOLDS: Record<string, number> = {
+      'N5': 1000,
+      'N4': 2500,
+      'N3': 5000,
+      'N2': 9000,
+      'N1': 15000
   };
+
+  const currentThreshold = XP_THRESHOLDS[user.level] || 15000;
+  const rankProgress = Math.min(100, (user.xp / currentThreshold) * 100);
 
   const chartData = [
     { name: 'Kanji', value: progress.kanji, color: '#EF4444' }, // Red
@@ -59,7 +65,7 @@ const Progress: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500 relative">
         
         {/* --- HERO SECTION: CHARACTER CARD --- */}
         <div className="bg-[#2C2C2C] text-[#F9F7E8] rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden border-2 border-[#D74B4B]">
@@ -74,9 +80,7 @@ const Progress: React.FC = () => {
                     <div className="w-40 h-40 rounded-full border-4 border-[#F9F7E8] overflow-hidden bg-white shadow-[0_0_30px_rgba(215,75,75,0.6)] relative z-10">
                         <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} alt="Avatar" className="w-full h-full object-cover" />
                     </div>
-                    {/* Spinning Aura */}
                     <div className="absolute -inset-4 border-2 border-dashed border-[#D74B4B] rounded-full animate-[spin_10s_linear_infinite] opacity-50" />
-                    <div className="absolute -inset-8 border border-dashed border-[#D74B4B] rounded-full animate-[spin_15s_linear_reverse_infinite] opacity-30" />
                 </div>
 
                 {/* Stats Block */}
@@ -93,29 +97,29 @@ const Progress: React.FC = () => {
                     <div className="flex items-center gap-2 text-[#8E9AAF] font-bold text-sm mb-6 justify-center md:justify-start">
                         <Sword className="w-4 h-4" /> Class: {user.level} Candidate
                         <span className="mx-2">•</span>
-                        <Crown className="w-4 h-4 text-yellow-500" /> Title: {user.badges.length > 5 ? 'Veteran' : 'Rookie'}
+                        <Crown className="w-4 h-4 text-yellow-500" /> XP: {user.xp}
                     </div>
 
                     {/* EXP Bar */}
-                    <div className="bg-black/30 rounded-full h-8 w-full relative overflow-hidden border border-white/10 shadow-inner">
+                    <div className="bg-black/30 rounded-full h-8 w-full relative overflow-hidden border border-white/10 shadow-inner group cursor-help" title={`Requires ${currentThreshold} XP for promotion`}>
                         <MotionDiv 
                             initial={{ width: 0 }}
-                            animate={{ width: `${calculateRank(user.xp)}%` }}
+                            animate={{ width: `${rankProgress}%` }}
                             transition={{ duration: 1.5, ease: "easeOut" }}
                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#D74B4B] via-red-500 to-yellow-500"
                         />
                         <div className="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold text-white shadow-sm z-10">
-                            <span>EXP: {user.xp}</span>
-                            <span>NEXT RANK: {1000 - (user.xp % 1000)} XP</span>
+                            <span>{Math.floor(rankProgress)}% to Promotion</span>
+                            <span>Target: {currentThreshold} XP</span>
                         </div>
                     </div>
-                </div>
-
-                {/* Big Rank Badge */}
-                <div className="hidden lg:flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 w-32">
-                    <Star className="w-12 h-12 text-yellow-400 fill-yellow-400 mb-2 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
-                    <span className="text-3xl font-black">{Math.floor(user.xp / 1000) + 1}</span>
-                    <span className="text-[10px] uppercase tracking-widest opacity-60">Power Lvl</span>
+                    
+                    <button 
+                        onClick={() => setShowRoadmap(true)}
+                        className="mt-4 text-xs font-bold text-[#D74B4B] hover:text-white hover:bg-[#D74B4B] px-3 py-1 rounded-full transition-all border border-[#D74B4B] inline-flex items-center gap-1"
+                    >
+                        View Promotion Path <ChevronRight className="w-3 h-3" />
+                    </button>
                 </div>
             </div>
         </div>
@@ -123,7 +127,6 @@ const Progress: React.FC = () => {
         {/* --- STATS GRID --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* 1. Mastery Radar (Bar Chart Representation) */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#E5E0D0] relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-6">
                     <Target className="w-6 h-6 text-[#D74B4B]" />
@@ -144,10 +147,8 @@ const Progress: React.FC = () => {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-                <p className="text-xs text-center text-[#8E9AAF] mt-2">Proficiency based on SRS reviews</p>
             </div>
 
-            {/* 2. Quest Log (Tasks) */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#E5E0D0] relative">
                 <div className="flex items-center gap-2 mb-6">
                     <Book className="w-6 h-6 text-blue-600" />
@@ -157,7 +158,7 @@ const Progress: React.FC = () => {
                 <div className="space-y-4">
                     <QuestItem 
                         title="Kanji Review" 
-                        progress={Math.min(100, (chartData[0].value / 20) * 100)} // Mock calculation
+                        progress={Math.min(100, (chartData[0].value / 20) * 100)} 
                         xp={50} 
                         icon={<PenTool className="w-4 h-4" />}
                         color="text-red-500"
@@ -179,7 +180,6 @@ const Progress: React.FC = () => {
                 </div>
             </div>
 
-            {/* 3. Recent History (Battle Log) */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#E5E0D0] flex flex-col">
                 <div className="flex items-center gap-2 mb-6">
                     <TrendingUp className="w-6 h-6 text-green-600" />
@@ -206,37 +206,59 @@ const Progress: React.FC = () => {
             </div>
         </div>
 
-        {/* --- TROPHY SHOWCASE PREVIEW --- */}
-        <div className="bg-[#2F3E46] rounded-3xl p-8 relative overflow-hidden">
-            <div className="absolute right-0 top-0 opacity-10">
-                <Award className="w-64 h-64 text-white -mr-10 -mt-10" />
-            </div>
-            
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-white font-japanese mb-2">Trophy Collection</h2>
-                    <p className="text-gray-400 text-sm">You have collected {user.badges.length} out of {BADGES.length} trophies.</p>
-                </div>
-                
-                {/* Mini Trophy Display */}
-                <div className="flex -space-x-3">
-                    {user.badges.slice(0, 5).map((bid, i) => {
-                        const badge = BADGES.find(b => b.id === bid);
-                        if(!badge) return null;
-                        return (
-                            <div key={i} className="w-10 h-10 rounded-full bg-white border-2 border-[#2F3E46] flex items-center justify-center z-10" title={badge.name}>
-                                <badge.icon className={`w-5 h-5 ${badge.color}`} />
-                            </div>
-                        );
-                    })}
-                    {user.badges.length > 5 && (
-                        <div className="w-10 h-10 rounded-full bg-[#D74B4B] border-2 border-[#2F3E46] flex items-center justify-center text-white text-xs font-bold z-20">
-                            +{user.badges.length - 5}
+        {/* --- ROADMAP MODAL --- */}
+        <AnimatePresence>
+            {showRoadmap && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <MotionDiv 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowRoadmap(false)}
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    />
+                    
+                    <MotionDiv 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        className="relative bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-[#E5E0D0] max-h-[90vh] overflow-y-auto"
+                    >
+                        <h2 className="text-3xl font-black text-[#2C2C2C] mb-6 font-japanese text-center">Upcoming Promotions</h2>
+                        
+                        <div className="space-y-6">
+                            {Object.entries(levelNames).map(([lvl, title], idx) => {
+                                const threshold = XP_THRESHOLDS[lvl];
+                                const isPassed = user.xp >= threshold;
+                                const isCurrent = lvl === user.level;
+                                const isLocked = user.xp < threshold && !isCurrent;
+
+                                return (
+                                    <div key={lvl} className={`p-4 rounded-xl border-2 flex items-center gap-4 ${isCurrent ? 'border-[#D74B4B] bg-[#FFF8E1]' : isPassed ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50 opacity-70'}`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white shrink-0 ${isCurrent ? 'bg-[#D74B4B]' : isPassed ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                            {isLocked ? <Lock className="w-5 h-5" /> : lvl}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-[#2C2C2C]">{title}</h3>
+                                            <p className="text-xs text-[#56636A]">Requirement: {threshold} XP</p>
+                                        </div>
+                                        {isPassed && <Award className="w-6 h-6 text-green-500" />}
+                                        {isCurrent && <span className="text-xs font-bold text-[#D74B4B] uppercase tracking-wider">Current</span>}
+                                    </div>
+                                )
+                            })}
                         </div>
-                    )}
+
+                        <button 
+                            onClick={() => setShowRoadmap(false)}
+                            className="w-full mt-8 bg-[#2F3E46] text-white py-4 rounded-xl font-bold hover:bg-[#1A262C] transition-all"
+                        >
+                            Close Map
+                        </button>
+                    </MotionDiv>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
 
     </div>
   );

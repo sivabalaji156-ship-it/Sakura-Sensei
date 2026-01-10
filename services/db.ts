@@ -3,7 +3,7 @@ import { UserProfile, StudyItem, SRSStatus, TestResult, JLPTLevel, Question, Bad
 import { MOCK_QUESTIONS, BADGES } from '../constants';
 import { FULL_JLPT_CONTENT, READING_MATERIALS, LISTENING_MATERIALS } from '../data/jlptData';
 
-// --- Database Keys (V2 for fresh start and stability) ---
+// --- Database Keys (V2) ---
 const DB_PREFIX = 'sakura_sensei_v2_';
 const DB_USERS = `${DB_PREFIX}users`;
 const DB_CURRENT_USER_ID = `${DB_PREFIX}current_user_id`;
@@ -18,7 +18,6 @@ let badgeListeners: BadgeListener[] = [];
 type UserListener = (user: UserProfile) => void;
 let userListeners: UserListener[] = [];
 
-// Subscribe to Badge Unlocks
 export const onBadgeUnlock = (fn: BadgeListener) => {
     badgeListeners.push(fn);
     return () => {
@@ -33,7 +32,6 @@ const notifyBadgeUnlock = (badgeId: string) => {
     }
 };
 
-// Subscribe to User Data Changes (XP, Streak, Level)
 export const onUserUpdate = (fn: UserListener) => {
     userListeners.push(fn);
     return () => {
@@ -65,8 +63,6 @@ const DEMO_USER: StoredUser = {
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kenji'
 };
 
-// --- Storage Helpers ---
-
 const getStorage = <T>(key: string, def: T): T => {
     if (typeof window === 'undefined' || !window.localStorage) return def;
     try {
@@ -74,7 +70,6 @@ const getStorage = <T>(key: string, def: T): T => {
         if (!s || s === 'undefined') return def;
         return JSON.parse(s);
     } catch (e) {
-        console.warn(`SakuraSensei DB: Failed to parse ${key}`, e);
         return def;
     }
 };
@@ -83,9 +78,7 @@ const setStorage = (key: string, val: any) => {
     if (typeof window === 'undefined' || !window.localStorage) return;
     try {
         localStorage.setItem(key, JSON.stringify(val));
-    } catch (e) {
-        console.error(`SakuraSensei DB: Failed to save ${key}`, e);
-    }
+    } catch (e) { }
 };
 
 const generateId = () => {
@@ -97,64 +90,66 @@ const generateId = () => {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
 };
 
-// Helper to encode Unicode strings for Base64
-const utf8_to_b64 = (str: string) => {
-    return window.btoa(unescape(encodeURIComponent(str)));
-};
-
-// Helper to decode Base64 strings to Unicode
-const b64_to_utf8 = (str: string) => {
-    return decodeURIComponent(escape(window.atob(str)));
-};
-
-// --- Initialization ---
+const utf8_to_b64 = (str: string) => window.btoa(unescape(encodeURIComponent(str)));
+const b64_to_utf8 = (str: string) => decodeURIComponent(escape(window.atob(str)));
 
 const initDb = () => {
     const users = getStorage<StoredUser[]>(DB_USERS, []);
-    
-    // Ensure Demo User exists
     const demoExists = users.some(u => u.username === DEMO_USER.username);
     if (!demoExists) {
         users.push(DEMO_USER);
         setStorage(DB_USERS, users);
-        console.log('SakuraSensei DB: Demo user initialized');
     }
 };
 
-// Run initialization immediately
 initDb();
 
-export const db = {
-    // --- Auth ---
+// --- Promotion Logic ---
+const XP_THRESHOLDS: Record<JLPTLevel, number> = {
+    'N5': 1000,
+    'N4': 2500,
+    'N3': 5000,
+    'N2': 9000,
+    'N1': 15000
+};
 
+const LEVELS_ORDER: JLPTLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+const checkLevelUp = (user: UserProfile): Partial<UserProfile> => {
+    const currentIdx = LEVELS_ORDER.indexOf(user.level);
+    if (currentIdx === -1 || currentIdx === LEVELS_ORDER.length - 1) return {};
+
+    const threshold = XP_THRESHOLDS[user.level];
+    if (user.xp >= threshold) {
+        const nextLevel = LEVELS_ORDER[currentIdx + 1];
+        // Only promote if they have passed at least one mock exam for current level with > 70%?
+        // For now, simpler: XP based promotion.
+        return { 
+            level: nextLevel,
+            badges: [...user.badges, `master_${user.level}`] // Award mastery badge for previous level
+        };
+    }
+    return {};
+};
+
+export const db = {
     login: async (username: string, pass: string): Promise<UserProfile> => {
         const users = getStorage<StoredUser[]>(DB_USERS, []);
         const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
         
-        if (!user) {
-            console.error('Login failed: User not found', username);
-            throw new Error("User ID not found. Did you register?");
-        }
-        
-        if (user.password && user.password !== pass) {
-            console.error('Login failed: Incorrect password');
-            throw new Error("Incorrect password.");
-        }
+        if (!user) throw new Error("User ID not found.");
+        if (user.password && user.password !== pass) throw new Error("Incorrect password.");
         
         setStorage(DB_CURRENT_USER_ID, user.id);
         const { password, ...profile } = user;
-        
-        // Trigger streak check on login
         setTimeout(() => db.checkDailyStreak(), 0);
-        
         return profile;
     },
 
     register: async (name: string, username: string, pass: string): Promise<UserProfile> => {
         const users = getStorage<StoredUser[]>(DB_USERS, []);
-        
         if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-            throw new Error("This User ID is already taken. Please choose another.");
+            throw new Error("User ID taken.");
         }
 
         const newUser: StoredUser = {
@@ -165,7 +160,7 @@ export const db = {
             level: 'N5',
             examDate: '', 
             dailyGoalMinutes: 15,
-            streak: 1, // Start with 1 day streak
+            streak: 1, 
             lastStudyDate: new Date().toISOString().split('T')[0],
             xp: 0,
             badges: [],
@@ -175,8 +170,6 @@ export const db = {
 
         users.push(newUser);
         setStorage(DB_USERS, users);
-        console.log('SakuraSensei DB: New user registered', username);
-        
         const { password, ...profile } = newUser;
         return profile;
     },
@@ -193,7 +186,6 @@ export const db = {
         const user = users.find(u => u.id === id);
         
         if (!user) {
-            // Stale ID, clear it
             localStorage.removeItem(DB_CURRENT_USER_ID);
             return null;
         }
@@ -213,26 +205,20 @@ export const db = {
             const oldUser = users[idx];
             const newUser = { ...oldUser, ...updates };
             
-            // Badge Notification Check
             if (updates.badges) {
                 const oldBadges = new Set(oldUser.badges);
                 updates.badges.forEach(b => {
-                    if (!oldBadges.has(b)) {
-                        notifyBadgeUnlock(b);
-                    }
+                    if (!oldBadges.has(b)) notifyBadgeUnlock(b);
                 });
             }
 
             users[idx] = newUser;
             setStorage(DB_USERS, users);
-            
-            // Notify app listeners
             const { password, ...profile } = newUser;
             notifyUserUpdate(profile);
         }
     },
 
-    // --- Streak Logic ---
     checkDailyStreak: () => {
         const user = db.getCurrentUser();
         if (!user) return;
@@ -240,10 +226,8 @@ export const db = {
         const today = new Date().toISOString().split('T')[0];
         const lastDate = user.lastStudyDate;
 
-        // 1. Already studied today
         if (lastDate === today) return;
 
-        // Calculate yesterday
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -252,21 +236,16 @@ export const db = {
         let updates: Partial<UserProfile> = {};
 
         if (lastDate === yesterdayStr) {
-            // 2. Studied yesterday -> Increment streak
             newStreak = (user.streak || 0) + 1;
         } else if (lastDate && lastDate < yesterdayStr) {
-            // 3. Gap larger than 1 day -> Reset streak
             newStreak = 1;
         } else if (!lastDate) {
-            // 4. First time tracking or legacy user
-            // If user has a streak but no date, assume they are continuing
             newStreak = user.streak > 0 ? user.streak : 1;
         }
 
         updates.streak = newStreak;
         updates.lastStudyDate = today;
 
-        // Check for streak badges
         const streakBadges = [`streak_${newStreak}`];
         if (BADGES.some(b => b.id === streakBadges[0]) && !user.badges.includes(streakBadges[0])) {
             updates.badges = [...user.badges, streakBadges[0]];
@@ -274,8 +253,6 @@ export const db = {
 
         db.updateUser(updates);
     },
-
-    // --- Content & Progress ---
 
     addCustomItem: (item: StudyItem) => {
         const custom = getStorage<StudyItem[]>(DB_CUSTOM_ITEMS, []);
@@ -285,42 +262,28 @@ export const db = {
 
     getContent: (level: JLPTLevel, type?: 'kanji' | 'vocabulary' | 'grammar'): StudyItem[] => {
         let items = FULL_JLPT_CONTENT.filter(i => i.level === level);
-        
-        // Merge custom items
         const custom = getStorage<StudyItem[]>(DB_CUSTOM_ITEMS, []);
         const customFiltered = custom.filter(i => i.level === level);
         items = [...items, ...customFiltered];
-
         if (type) items = items.filter(i => i.type === type);
         return items;
     },
     
-    getReadingMaterials: (level: JLPTLevel) => {
-        return READING_MATERIALS.filter(r => r.level === level);
-    },
-
-    getListeningMaterials: (level: JLPTLevel): ListeningMaterial[] => {
-        return LISTENING_MATERIALS.filter(l => l.level === level);
-    },
+    getReadingMaterials: (level: JLPTLevel) => READING_MATERIALS.filter(r => r.level === level),
+    getListeningMaterials: (level: JLPTLevel) => LISTENING_MATERIALS.filter(l => l.level === level),
 
     getProgress: (level: JLPTLevel) => {
         const userId = getStorage<string>(DB_CURRENT_USER_ID, '');
         if (!userId) return { kanji: 0, vocabulary: 0, grammar: 0 };
-
         const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
         const levelItems = FULL_JLPT_CONTENT.filter(i => i.level === level);
-        
         const counts = { kanji: 0, vocabulary: 0, grammar: 0 };
         const totals = { kanji: 0, vocabulary: 0, grammar: 0 };
-
         levelItems.forEach(item => {
             totals[item.type]++;
             const key = `${userId}:${item.id}`;
-            if (srsData[key] && srsData[key].streak > 0) {
-                counts[item.type]++;
-            }
+            if (srsData[key] && srsData[key].streak > 0) counts[item.type]++;
         });
-
         return {
             kanji: totals.kanji === 0 ? 0 : Math.round((counts.kanji / totals.kanji) * 100),
             vocabulary: totals.vocabulary === 0 ? 0 : Math.round((counts.vocabulary / totals.vocabulary) * 100),
@@ -328,9 +291,7 @@ export const db = {
         };
     },
 
-    getExamQuestions: (level: JLPTLevel): Question[] => {
-        return MOCK_QUESTIONS;
-    },
+    getExamQuestions: (level: JLPTLevel) => MOCK_QUESTIONS,
 
     saveReview: (itemId: string, quality: number) => {
         const userId = getStorage<string>(DB_CURRENT_USER_ID, '');
@@ -338,7 +299,6 @@ export const db = {
 
         const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
         const key = `${userId}:${itemId}`;
-        
         const current = srsData[key] || { itemId, nextReview: Date.now(), interval: 0, easeFactor: 2.5, streak: 0 };
         
         if (quality >= 3) {
@@ -355,208 +315,141 @@ export const db = {
         srsData[key] = current;
         setStorage(DB_SRS, srsData);
         
-        // --- GAMIFICATION LOGIC ---
-        // Also trigger daily streak check here in case they missed login but reviewed
         db.checkDailyStreak();
 
         const user = db.getCurrentUser();
         if(user) {
             let updates: Partial<UserProfile> = {};
             let newBadges = [...user.badges];
-            let xpGain = 10; // Base XP for review
-
-            // XP Boost for streak (SRS Item Streak)
+            let xpGain = 10;
             if (current.streak > 3) xpGain += 5;
             
             const learnedCount = Object.keys(srsData).filter(k => k.startsWith(userId) && srsData[k].streak > 0).length;
-            
-            // Badge Checks (Milestones)
             ['10', '25', '50', '100'].forEach(m => {
                  const bId = `total_kanji_${m}`;
                  if (learnedCount >= parseInt(m) && !user.badges.includes(bId) && BADGES.find(b => b.id === bId)) {
                      newBadges.push(bId);
-                     xpGain += 100; // Bonus XP for badge
+                     xpGain += 100;
                  }
             });
             
-            // Time Badge Checks
             const hour = new Date().getHours();
             if ((hour >= 22 || hour <= 4) && !user.badges.includes('night_owl')) {
-                newBadges.push('night_owl');
-                xpGain += 50;
+                newBadges.push('night_owl'); xpGain += 50;
             }
             if (hour >= 5 && hour <= 7 && !user.badges.includes('early_bird')) {
-                newBadges.push('early_bird');
-                xpGain += 50;
+                newBadges.push('early_bird'); xpGain += 50;
             }
 
-            updates.xp = user.xp + xpGain;
+            const currentTotalXP = user.xp + xpGain;
+            updates.xp = currentTotalXP;
             if (newBadges.length > user.badges.length) updates.badges = newBadges;
+            
+            // Check Promotion
+            const promoUpdates = checkLevelUp({ ...user, xp: currentTotalXP });
+            if (Object.keys(promoUpdates).length > 0) {
+                 updates = { ...updates, ...promoUpdates };
+            }
 
             db.updateUser(updates);
         }
     },
 
-    // Updated to accept optional type filter
     getDueItems: (level: JLPTLevel, type?: 'kanji' | 'vocabulary' | 'grammar'): StudyItem[] => {
         const userId = getStorage<string>(DB_CURRENT_USER_ID, '');
         if (!userId) return []; 
-
         const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
         let allItems = FULL_JLPT_CONTENT.filter(i => i.level === level);
-        
-        if (type) {
-            allItems = allItems.filter(i => i.type === type);
-        }
-
+        if (type) allItems = allItems.filter(i => i.type === type);
         const now = Date.now();
-        
         const due = allItems.filter(item => {
             const key = `${userId}:${item.id}`;
             const status = srsData[key];
             if (!status) return false;
             return status.nextReview <= now;
         });
-
-        // If few items due, add new ones to learn
         if (due.length < 10) {
-            const newItems = allItems.filter(item => {
-                const key = `${userId}:${item.id}`;
-                return !srsData[key];
-            }).slice(0, 10 - due.length);
+            const newItems = allItems.filter(item => !srsData[`${userId}:${item.id}`]).slice(0, 10 - due.length);
             return [...due, ...newItems];
         }
-
         return due;
     },
 
     saveTestResult: (result: Omit<TestResult, 'userId'>) => {
         const userId = getStorage<string>(DB_CURRENT_USER_ID, '');
         if (!userId) return;
-
-        // Daily Activity
         db.checkDailyStreak();
-
         const results = getStorage<TestResult[]>(DB_RESULTS, []);
         const fullResult: TestResult = { ...result, userId };
         results.push(fullResult);
         setStorage(DB_RESULTS, results);
         
-        // Mock Exam Badge Check
         const user = db.getCurrentUser();
-        if (user && result.score === result.total) {
-            if (!user.badges.includes('flawless_victory')) {
-                db.updateUser({ 
-                    badges: [...user.badges, 'flawless_victory'],
-                    xp: user.xp + 500 
-                });
+        if (user) {
+            let updates: Partial<UserProfile> = {};
+            let xpGain = result.score * 10;
+            let newBadges = [...user.badges];
+
+            if (result.score === result.total && !user.badges.includes('flawless_victory')) {
+                newBadges.push('flawless_victory');
+                xpGain += 500;
             }
-        } else if (user) {
-            // XP for finishing exam
-            db.updateUser({ xp: user.xp + (result.score * 10) });
+            
+            updates.xp = user.xp + xpGain;
+            if (newBadges.length > user.badges.length) updates.badges = newBadges;
+
+            // Check Promotion
+            const promoUpdates = checkLevelUp({ ...user, xp: user.xp + xpGain });
+            if (Object.keys(promoUpdates).length > 0) {
+                 updates = { ...updates, ...promoUpdates };
+            }
+
+            db.updateUser(updates);
         }
     },
 
-    getTestHistory: (): TestResult[] => {
+    getTestHistory: () => {
         const userId = getStorage<string>(DB_CURRENT_USER_ID, '');
         if (!userId) return [];
-        const results = getStorage<TestResult[]>(DB_RESULTS, []);
-        return results.filter(r => r.userId === userId);
+        return getStorage<TestResult[]>(DB_RESULTS, []).filter(r => r.userId === userId);
     },
 
     getDebugUsers: () => {
-        const users = getStorage<StoredUser[]>(DB_USERS, []);
-        return users.map(u => ({ 
-            username: u.username, 
-            password: u.password, 
-            name: u.name, 
-            avatar: u.avatar,
-            level: u.level 
-        }));
+        return getStorage<StoredUser[]>(DB_USERS, []).map(u => ({ username: u.username, name: u.name, avatar: u.avatar, level: u.level, password: u.password }));
     },
-
-    // --- Cross-Device Sync (Import/Export) ---
 
     generateTransferCode: (userId: string) => {
         const users = getStorage<StoredUser[]>(DB_USERS, []);
         const user = users.find(u => u.id === userId);
         if (!user) throw new Error("User not found");
-
         const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
         const userSrs: Record<string, SRSStatus> = {};
-        // Only get SRS items for this user
-        Object.keys(srsData).forEach(key => {
-            if (key.startsWith(`${userId}:`)) {
-                userSrs[key] = srsData[key];
-            }
-        });
-
+        Object.keys(srsData).forEach(key => { if (key.startsWith(`${userId}:`)) userSrs[key] = srsData[key]; });
         const allResults = getStorage<TestResult[]>(DB_RESULTS, []);
         const userResults = allResults.filter(r => r.userId === userId);
-
         const customItems = getStorage<StudyItem[]>(DB_CUSTOM_ITEMS, []);
-
-        const payload = {
-            version: 1,
-            user,
-            srs: userSrs,
-            results: userResults,
-            customItems: customItems, // Include custom items in sync
-            timestamp: Date.now()
-        };
-
-        return utf8_to_b64(JSON.stringify(payload));
+        return utf8_to_b64(JSON.stringify({ version: 1, user, srs: userSrs, results: userResults, customItems, timestamp: Date.now() }));
     },
 
     restoreFromTransferCode: (code: string): UserProfile => {
-        try {
-            const jsonStr = b64_to_utf8(code);
-            const payload = JSON.parse(jsonStr);
-            
-            if (!payload.user || !payload.srs) {
-                throw new Error("Invalid transfer code format");
-            }
-
-            const { user, srs, results, customItems } = payload;
-
-            // 1. Restore/Update User
-            const users = getStorage<StoredUser[]>(DB_USERS, []);
-            const existingIdx = users.findIndex(u => u.id === user.id);
-            if (existingIdx !== -1) {
-                // Merge data, preferring the import
-                users[existingIdx] = { ...users[existingIdx], ...user };
-            } else {
-                users.push(user);
-            }
-            setStorage(DB_USERS, users);
-
-            // 2. Restore SRS Data
-            const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
-            const mergedSrs = { ...srsData, ...srs };
-            setStorage(DB_SRS, mergedSrs);
-
-            // 3. Restore Results (Deduplicate by ID)
-            const allResults = getStorage<TestResult[]>(DB_RESULTS, []);
-            const existingIds = new Set(allResults.map(r => r.id));
-            const newResults = results.filter((r: TestResult) => !existingIds.has(r.id));
-            setStorage(DB_RESULTS, [...allResults, ...newResults]);
-
-            // 4. Restore Custom Items (Deduplicate)
-            if (customItems && Array.isArray(customItems)) {
-                const currentCustom = getStorage<StudyItem[]>(DB_CUSTOM_ITEMS, []);
-                const existingCustomIds = new Set(currentCustom.map(i => i.id));
-                const newCustom = customItems.filter((i: StudyItem) => !existingCustomIds.has(i.id));
-                setStorage(DB_CUSTOM_ITEMS, [...currentCustom, ...newCustom]);
-            }
-            
-            // 5. Force Login Context
-            setStorage(DB_CURRENT_USER_ID, user.id);
-
-            const { password, ...profile } = user;
-            return profile;
-        } catch (e) {
-            console.error(e);
-            throw new Error("Invalid Transfer Code. Please ensure you copied the entire string.");
+        const payload = JSON.parse(b64_to_utf8(code));
+        const { user, srs, results, customItems } = payload;
+        const users = getStorage<StoredUser[]>(DB_USERS, []);
+        const idx = users.findIndex(u => u.id === user.id);
+        if (idx !== -1) users[idx] = { ...users[idx], ...user }; else users.push(user);
+        setStorage(DB_USERS, users);
+        const srsData = getStorage<Record<string, SRSStatus>>(DB_SRS, {});
+        setStorage(DB_SRS, { ...srsData, ...srs });
+        const allResults = getStorage<TestResult[]>(DB_RESULTS, []);
+        const existingIds = new Set(allResults.map(r => r.id));
+        setStorage(DB_RESULTS, [...allResults, ...results.filter((r: TestResult) => !existingIds.has(r.id))]);
+        if (customItems) {
+            const currentCustom = getStorage<StudyItem[]>(DB_CUSTOM_ITEMS, []);
+            const existingC = new Set(currentCustom.map(i => i.id));
+            setStorage(DB_CUSTOM_ITEMS, [...currentCustom, ...customItems.filter((i: StudyItem) => !existingC.has(i.id))]);
         }
+        setStorage(DB_CURRENT_USER_ID, user.id);
+        const { password, ...profile } = user;
+        return profile;
     }
 };

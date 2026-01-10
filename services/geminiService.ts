@@ -2,17 +2,28 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { JLPTLevel } from "../types";
 
-// Safe access to env with extra fallback
+// Robust API Key Retrieval
 const getApiKey = () => {
+    let key = '';
     try {
-        // Double check process existence before accessing properties
-        if (typeof process !== 'undefined' && process && process.env && process.env.API_KEY) {
-            return process.env.API_KEY;
+        // 1. Check process.env (Standard Node/Webpack/Parcel)
+        if (typeof process !== 'undefined' && process?.env?.API_KEY) {
+            key = process.env.API_KEY;
         }
-    } catch (e) {
-        // Silently fail if process is not defined (browser env)
+    } catch (e) { }
+
+    if (!key) {
+        try {
+            // 2. Check import.meta.env (Vite Standard fallback)
+            // @ts-ignore
+            if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_KEY) {
+                // @ts-ignore
+                key = import.meta.env.VITE_API_KEY;
+            }
+        } catch (e) { }
     }
-    return '';
+    
+    return key;
 };
 
 const API_KEY = getApiKey();
@@ -23,7 +34,6 @@ let ai: GoogleGenAI | null = null;
 const getAiClient = () => {
     if (!ai && API_KEY) {
         try {
-            // Initialization for @google/genai 0.3.0
             ai = new GoogleGenAI({ apiKey: API_KEY });
         } catch (e) {
             console.error("Failed to init GoogleGenAI", e);
@@ -40,7 +50,10 @@ Attributes:
 - **Tone**: Encouraging, polite (Desu/Masu), mostly English but uses simple Japanese phrases (Ganbatte, Sugoi!).
 - **Style**: Anime-inspired "Sensei" character. Use emojis like 🌸, ✨, 🎌.
 - **Method**: 
-  - When explaining grammar, break it down: Structure -> Meaning -> Example.
+  - **Grammar Explanations**: When asked about grammar (e.g., "explain て-form", "what implies..."), provide:
+    1. **Structure**: How it connects.
+    2. **Meaning**: The nuance.
+    3. **Examples**: 2-3 simple sentences with translation.
   - When correcting, be gentle but precise.
   - If asked about a word, give the Kanji, Hiragana, and Context.
 
@@ -50,13 +63,17 @@ Constraints:
 `;
 
 let chatSession: Chat | null = null;
+let currentLevel: JLPTLevel = 'N5';
 
 export const initChat = (level: JLPTLevel) => {
     const client = getAiClient();
     if (!client) return;
     
+    // Only re-initialize if level changes or session is missing
+    if (chatSession && currentLevel === level) return;
+
     try {
-        // Updated to use the recommended model for text tasks
+        currentLevel = level;
         chatSession = client.chats.create({
             model: 'gemini-3-flash-preview',
             config: {
@@ -70,28 +87,34 @@ export const initChat = (level: JLPTLevel) => {
 };
 
 export const sendMessageToSensei = async (message: string): Promise<string> => {
-  if (!API_KEY) return "Please set your API Key to talk to Sensei! 🌸 (Simulated Mode)";
+  if (!API_KEY) {
+      console.warn("SakuraSensei: Missing API Key");
+      return "I can't connect to my brain right now! Please check if your API Key is set in the environment variables (process.env.API_KEY). 🌸";
+  }
   
-  if (!chatSession) initChat('N5'); // Fallback
+  const client = getAiClient();
+  if (!client) return "Sensei initialization failed.";
+
+  if (!chatSession) initChat(currentLevel);
 
   try {
     if(!chatSession) {
-        // Double check after retry
-        initChat('N5');
+        // Retry init
+        initChat(currentLevel);
         if (!chatSession) return "Sensei is offline right now (Check connection).";
     }
     
     if (chatSession) {
-        // In @google/genai 0.3.0, sendMessage takes { message: string }
+        // Send message using the correct object structure for 0.3.0
         const response: GenerateContentResponse = await chatSession.sendMessage({ message });
         
-        // response.text is a getter in the new SDK
+        // Access text via getter
         return response.text || "Hmm, I'm thinking... please ask again! 🤔";
     }
     return "Sensei connection error.";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Sensei is having trouble connecting... verify your internet or API key.";
+    return "Sensei is having trouble connecting... (Error: " + (error as any).message + ")";
   }
 };
 
@@ -100,7 +123,6 @@ export const generateStudyPlan = async (level: JLPTLevel, daysLeft: number): Pro
     if (!client) return "Set API Key for AI Plans. (Simulated Plan: Study Genki I Ch. 1)";
     
     try {
-        // Using generateContent with the updated model
         const response = await client.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Generate a **one-day study plan** (markdown) for a student taking JLPT ${level} in ${daysLeft} days. 

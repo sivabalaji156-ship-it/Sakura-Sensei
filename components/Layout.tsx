@@ -17,7 +17,8 @@ import {
   Book,
   Repeat,
   MonitorPlay,
-  TrendingUp
+  TrendingUp,
+  Sword
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { BadgePopup } from './BadgePopup';
@@ -53,11 +54,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
   // --- Handlers ---
 
   const handleSwitchUser = () => {
-      // 1. Clear Local Storage
       db.logout();
-      // 2. Update Parent State (App.tsx)
       onLogout();
-      // 3. Navigate safely without reloading
       navigate('/login', { replace: true });
   };
 
@@ -110,17 +108,21 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Top Header */}
+        {/* Top Header - Samurai Icon Button */}
         <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[#D74B4B] select-none">
-             <div className="w-10 h-10 bg-[#F9F7E8] rounded-xl flex items-center justify-center border border-[#D74B4B]/20">
-                <span className="text-2xl">🌸</span>
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-3 group transition-transform active:scale-95 text-left"
+            title="Return to Landing Page"
+          >
+             <div className="w-12 h-12 bg-[#2F3E46] rounded-xl flex items-center justify-center border-2 border-[#D74B4B] shadow-lg shadow-[#D74B4B]/20 group-hover:shadow-[#D74B4B]/40 transition-shadow">
+                <Sword className="w-7 h-7 text-[#F9F7E8]" />
              </div>
              <div>
-                <h1 className="text-lg font-black tracking-tighter uppercase text-[#2F3E46] leading-none">Sakura</h1>
+                <h1 className="text-lg font-black tracking-tighter uppercase text-[#2F3E46] leading-none group-hover:text-[#D74B4B] transition-colors">Sakura</h1>
                 <h1 className="text-lg font-black tracking-tighter uppercase text-[#D74B4B] leading-none">Sensei</h1>
              </div>
-          </div>
+          </button>
           <button onClick={toggleSidebar} className="lg:hidden text-[#8E9AAF] hover:text-[#2C2C2C]">
             <X className="w-6 h-6" />
           </button>
@@ -177,13 +179,13 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           </button>
 
           <div className="flex items-center gap-3 ml-auto">
-             {/* Streak Link (Hidden on very small screens) */}
+             {/* Streak Link */}
              <NavLink to="/streak" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF8E1] text-amber-600 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors hover:scale-105 active:scale-95 group">
                 <Zap className="w-4 h-4 fill-amber-500 text-amber-500 group-hover:animate-pulse" />
                 <span className="font-bold text-sm">{user.streak} Days</span>
              </NavLink>
 
-             {/* Trophies Link (Hidden on very small screens) */}
+             {/* Trophies Link */}
              <NavLink to="/badges" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FCE4EC] text-[#D74B4B] rounded-full border border-pink-200 hover:bg-pink-100 transition-colors hover:scale-105 active:scale-95">
                 <Award className="w-4 h-4" />
                 <span className="font-bold text-sm">{user.badges.length} Trophies</span>
@@ -200,7 +202,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 </button>
 
                 {isSystemOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E5E0D0] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E5E0D0] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
                         <div className="p-3 border-b border-[#E5E0D0] bg-[#F9F7E8]">
                             <p className="text-[10px] font-black text-[#8E9AAF] uppercase tracking-widest text-center">System</p>
                         </div>
