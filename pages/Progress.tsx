@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { db, onUserUpdate } from '../services/db';
 import { UserProfile, JLPTLevel } from '../types';
-import { BADGES } from '../constants';
+import { BADGES, LEVELS } from '../constants';
 import { 
     Zap, 
     TrendingUp, 
@@ -69,8 +69,23 @@ const Progress: React.FC = () => {
       'N1': 15000
   };
 
+  // Calculate Relative Progress for the Bar
+  const currentLevelIndex = LEVELS.indexOf(user.level);
   const currentThreshold = XP_THRESHOLDS[user.level] || 15000;
-  const rankProgress = Math.min(100, (user.xp / currentThreshold) * 100);
+  
+  // Determine previous level threshold (floor)
+  let prevThreshold = 0;
+  if (currentLevelIndex > 0) {
+      const prevLevel = LEVELS[currentLevelIndex - 1];
+      prevThreshold = XP_THRESHOLDS[prevLevel] || 0;
+  }
+
+  const xpGainedInLevel = Math.max(0, user.xp - prevThreshold);
+  const xpNeededForLevel = currentThreshold - prevThreshold;
+  
+  const rankProgress = xpNeededForLevel > 0 
+      ? Math.min(100, (xpGainedInLevel / xpNeededForLevel) * 100) 
+      : 100;
 
   const chartData = [
     { name: 'Kanji', value: progress.kanji, color: '#EF4444' }, // Red
@@ -111,11 +126,11 @@ const Progress: React.FC = () => {
                     <div className="flex items-center gap-2 text-[#8E9AAF] font-bold text-sm mb-6 justify-center md:justify-start">
                         <Sword className="w-4 h-4" /> Class: {user.level} Candidate
                         <span className="mx-2">•</span>
-                        <Crown className="w-4 h-4 text-yellow-500" /> XP: {user.xp}
+                        <Crown className="w-4 h-4 text-yellow-500" /> Total XP: {user.xp}
                     </div>
 
                     {/* EXP Bar */}
-                    <div className="bg-black/30 rounded-full h-8 w-full relative overflow-hidden border border-white/10 shadow-inner group cursor-help" title={`Requires ${currentThreshold} XP for promotion`}>
+                    <div className="bg-black/30 rounded-full h-8 w-full relative overflow-hidden border border-white/10 shadow-inner group cursor-help" title={`Requires ${currentThreshold} Total XP for promotion`}>
                         <MotionDiv 
                             initial={{ width: 0 }}
                             animate={{ width: `${rankProgress}%` }}
@@ -124,7 +139,7 @@ const Progress: React.FC = () => {
                         />
                         <div className="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold text-white shadow-sm z-10">
                             <span>{Math.floor(rankProgress)}% to Promotion</span>
-                            <span>Target: {currentThreshold} XP</span>
+                            <span>{xpGainedInLevel} / {xpNeededForLevel} XP (Current Rank)</span>
                         </div>
                     </div>
                     
@@ -254,7 +269,7 @@ const Progress: React.FC = () => {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-[#2C2C2C]">{title}</h3>
-                                            <p className="text-xs text-[#56636A]">Requirement: {threshold} XP</p>
+                                            <p className="text-xs text-[#56636A]">Requirement: {threshold} Total XP</p>
                                         </div>
                                         {isPassed && <Award className="w-6 h-6 text-green-500" />}
                                         {isCurrent && <span className="text-xs font-bold text-[#D74B4B] uppercase tracking-wider">Current</span>}
