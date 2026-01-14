@@ -2,36 +2,9 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { JLPTLevel } from "../types";
 
-// Robust API Key Retrieval
-const getApiKey = () => {
-    let key = '';
-    try {
-        // 1. Check process.env (Standard Node/Webpack/Parcel)
-        if (typeof process !== 'undefined' && process?.env?.API_KEY) {
-            key = process.env.API_KEY;
-        }
-    } catch (e) { }
-
-    if (!key) {
-        try {
-            // 2. Check import.meta.env (Vite Standard fallback)
-            // @ts-ignore
-            if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_KEY) {
-                // @ts-ignore
-                key = import.meta.env.VITE_API_KEY;
-            }
-        } catch (e) { }
-    }
-    
-    // Clean up key: remove whitespace and accidental quotes
-    if (key) {
-        key = key.trim().replace(/^["']|["']$/g, '');
-    }
-    
-    return key;
-};
-
-const API_KEY = getApiKey();
+// --- Configuration ---
+// Using the provided API Key for direct integration
+const API_KEY = 'AIzaSyAkG3nUBDt3y1FdYYvZY4dM1nvpdN4c1rs';
 
 // Initialize client lazy-ly
 let ai: GoogleGenAI | null = null;
@@ -93,41 +66,39 @@ export const initChat = (level: JLPTLevel) => {
 
 export const sendMessageToSensei = async (message: string): Promise<string> => {
   if (!API_KEY) {
-      console.warn("SakuraSensei: Missing API Key");
-      return "I can't connect to my brain right now! Please check if your API Key is set in the environment variables (process.env.API_KEY). 🌸";
+      return "I can't connect to my brain right now! API Key is missing. 🌸";
   }
   
   const client = getAiClient();
   if (!client) return "Sensei initialization failed (Client Error).";
 
-  if (!chatSession) initChat(currentLevel);
-
   try {
-    if(!chatSession) {
-        // Retry init
+    if (!chatSession) {
         initChat(currentLevel);
-        if (!chatSession) return "Sensei is offline right now (Check connection).";
     }
     
-    if (chatSession) {
-        // Send message using the correct object structure for 0.3.0
-        const response: GenerateContentResponse = await chatSession.sendMessage({ message });
-        
-        // Access text via getter
-        return response.text || "Hmm, I'm thinking... please ask again! 🤔";
-    }
-    return "Sensei connection error.";
+    // Double check session existence after init attempt
+    if (!chatSession) return "Sensei is offline right now (Connection failed).";
+    
+    // Send message using the correct object structure for 0.3.0
+    const response: GenerateContentResponse = await chatSession.sendMessage({ message });
+    
+    // Access text via getter
+    return response.text || "Hmm, I'm thinking... please ask again! 🤔";
+    
   } catch (error: any) {
     console.error("Gemini Error:", error);
     
     // Friendly error parsing
     let errorMessage = "Sensei is having trouble connecting...";
     if (error.message?.includes('400') || error.message?.includes('API key')) {
-        errorMessage = "My API Key seems to be invalid. Please check your configuration. 🌸";
+        errorMessage = "My API Key seems to be invalid. Please check the configuration. 🌸";
     } else if (error.message?.includes('429')) {
         errorMessage = "I'm a bit overwhelmed! Let's take a short break (Rate Limit). 🍵";
+    } else if (error.message?.includes('404')) {
+         errorMessage = "I couldn't find the right textbook (Model not found). Try again later.";
     } else {
-        errorMessage += ` (Error: ${error.message})`;
+        errorMessage += ` (Error: ${error.message || 'Unknown'})`;
     }
     
     return errorMessage;
@@ -150,13 +121,14 @@ export const generateStudyPlan = async (level: JLPTLevel, daysLeft: number): Pro
         });
         return response.text || "Plan generation failed.";
     } catch (e) {
+        console.error(e);
         return "Could not contact the planning server.";
     }
 }
 
 export const explainGrammar = async (concept: string, level: JLPTLevel): Promise<string> => {
     const client = getAiClient();
-    if (!client) return "Please set your API Key to ask Sensei! 🌸 (Simulated Explanation: This is a grammar point.)";
+    if (!client) return "Please set your API Key to ask Sensei! 🌸";
     
     try {
         const response = await client.models.generateContent({
@@ -172,8 +144,11 @@ export const explainGrammar = async (concept: string, level: JLPTLevel): Promise
             Keep it structured, concise and encouraging.`,
         });
         return response.text || "Sensei couldn't find that in the scroll... try again?";
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        return "Sensei is having connection trouble... check your API Key.";
+        if (e.message?.includes('400') || e.message?.includes('API key')) {
+             return "My API Key seems to be invalid. 🌸";
+        }
+        return "Sensei is having connection trouble...";
     }
 }
